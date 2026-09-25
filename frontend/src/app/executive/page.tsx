@@ -43,7 +43,7 @@ export default function ExecutiveDashboard() {
       <div className="flex items-center gap-3">
         <div className="flex items-center bg-[var(--card)] border border-[var(--border)] rounded-md px-3 py-2">
           <span className="text-sm text-[var(--muted-foreground)] mr-2">Periode:</span>
-          <select className="bg-transparent text-sm font-medium outline-none cursor-pointer">
+          <select className="bg-[#1e293b] text-white text-sm font-medium outline-none cursor-pointer p-1 rounded border border-gray-600">
             <option>September 2026</option>
             <option>Agustus 2026</option>
             <option>Q3 2026</option>
@@ -53,7 +53,20 @@ export default function ExecutiveDashboard() {
         </div>
         <button 
           onClick={() => {
-            alert('DEMO: Di versi final, sistem akan men-generate Laporan PDF (Standar GHG Protocol & GRI) untuk periode yang dipilih.');
+            // Trigger Print to PDF
+            setTimeout(() => window.print(), 500);
+            
+            // Trigger actual file download (CSV Summary)
+            const csvContent = "Periode,Carbon Credit (Ton),Estimasi Nilai (USD),Sampah Diproses (Ton),ESG Score
+September 2026,1294,62759,2847,82";
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ASHER_Executive_Summary.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            
             setBtn1('Telah Diunduh');
           }}
           className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-2">
