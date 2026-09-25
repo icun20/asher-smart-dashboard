@@ -6,6 +6,7 @@ export default function ExecutiveDashboard() {
   const [carbonVal, setCarbonVal] = useState(0);
   const [creditVal, setCreditVal] = useState(0);
   const [wasteVal, setWasteVal] = useState(0);
+  const [btn1, setBtn1] = useState('Export Laporan');
 
   useEffect(() => {
     const animate = (target: number, setter: Function, duration: number) => {
