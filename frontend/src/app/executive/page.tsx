@@ -34,16 +34,31 @@ export default function ExecutiveDashboard() {
   <div className="max-w-6xl mx-auto mb-6">
     <div className="flex items-center justify-between">
       <div>
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-lg">A</div>
-          <h1 className="text-2xl font-bold">ASHER Smart Dashboard</h1>
-        </div>
-        <p className="text-[var(--muted-foreground)] text-sm ml-[52px]">Executive Overview — PT. Industri Nusantara</p>
+        <h1 className="text-3xl font-bold tracking-tight mb-1">ASHER Smart Dashboard</h1>
+        <p className="text-[var(--muted-foreground)]">Executive Overview &mdash; PT. Industri Nusantara</p>
       </div>
-      <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
-        <span className="pulse-dot inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-        <span>Live</span>
-        <span className="ml-2">25 Sep 2026, 18:50 WIB</span>
+      
+      {/* Date Filter & Export */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center bg-[var(--card)] border border-[var(--border)] rounded-md px-3 py-2">
+          <span className="text-sm text-[var(--muted-foreground)] mr-2">Periode:</span>
+          <select className="bg-transparent text-sm font-medium outline-none cursor-pointer">
+            <option>September 2026</option>
+            <option>Agustus 2026</option>
+            <option>Q3 2026</option>
+            <option>Tahun 2026 (YTD)</option>
+            <option>Kustom Rentang...</option>
+          </select>
+        </div>
+        <button 
+          onClick={() => {
+            alert('DEMO: Di versi final, sistem akan men-generate Laporan PDF (Standar GHG Protocol & GRI) untuk periode yang dipilih.');
+            setBtn1('Telah Diunduh');
+          }}
+          className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          {btn1 === 'Telah Diunduh' ? 'PDF Terunduh' : 'Export Laporan'}
+        </button>
       </div>
     </div>
   </div>
