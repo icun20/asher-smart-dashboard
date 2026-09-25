@@ -8,10 +8,10 @@ export default function ExecutiveDashboard() {
   const [wasteVal, setWasteVal] = useState(0);
 
   useEffect(() => {
-    const animate = (target, setter, duration) => {
+    const animate = (target: number, setter: Function, duration: number) => {
       let start = 0;
       const startTime = performance.now();
-      const update = (currentTime) => {
+      const update = (currentTime: number) => {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
         const eased = 1 - Math.pow(1 - progress, 3);
