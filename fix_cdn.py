@@ -1,4 +1,9 @@
-import type { Metadata } from "next";
+﻿import os
+
+layout_path = r'C:\Users\muham\.gemini\antigravity\brain\4eba96b2-d1a7-40d6-b229-659dfed4c9a0\scratch\Asher_Pamarai_App\frontend\src\app\layout.tsx'
+css_path = r'C:\Users\muham\.gemini\antigravity\brain\4eba96b2-d1a7-40d6-b229-659dfed4c9a0\scratch\Asher_Pamarai_App\frontend\src\app\globals.css'
+
+layout_content = '''import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -30,3 +35,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+'''
+with open(layout_path, 'w', encoding='utf-8') as f:
+    f.write(layout_content)
+
+with open(css_path, 'r', encoding='utf-8') as f:
+    css_content = f.read()
+
+# Remove tailwind import
+css_content = css_content.replace('@import "tailwindcss";', '')
+with open(css_path, 'w', encoding='utf-8') as f:
+    f.write(css_content)
