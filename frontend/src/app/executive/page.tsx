@@ -57,8 +57,8 @@ export default function ExecutiveDashboard() {
             setTimeout(() => window.print(), 500);
             
             // Trigger actual file download (CSV Summary)
-            const csvContent = "Periode,Carbon Credit (Ton),Estimasi Nilai (USD),Sampah Diproses (Ton),ESG Score
-September 2026,1294,62759,2847,82";
+            const csvContent = Periode,Carbon Credit (Ton),Estimasi Nilai (USD),Sampah Diproses (Ton),ESG Score
+September 2026,1294,62759,2847,82;
             const blob = new Blob([csvContent], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
