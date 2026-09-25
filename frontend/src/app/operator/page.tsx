@@ -8,7 +8,7 @@ export default function OperatorDashboard() {
       <div className="max-w-6xl mx-auto mb-4"><a href="/" className="text-emerald-500 text-sm hover:underline">&larr; Kembali ke Menu Utama</a></div>
       
 
-  <!-- Header -->
+  {/* Header */}
   <div className="max-w-6xl mx-auto mb-6">
     <div className="flex items-center justify-between">
       <div>
@@ -31,11 +31,11 @@ export default function OperatorDashboard() {
     </div>
   </div>
 
-  <!-- Predictive Maintenance -->
+  {/* Predictive Maintenance */}
   <div className="max-w-6xl mx-auto mb-6">
     <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-3">🔧 Predictive Maintenance — Kesehatan Komponen</p>
     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-      <!-- Plasma Torch -->
+      {/* Plasma Torch */}
       <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm text-center">
         <div className="relative mx-auto w-16 h-16 mb-2">
           <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
@@ -48,7 +48,7 @@ export default function OperatorDashboard() {
         <p className="text-xs font-medium">Plasma Torch</p>
         <p className="text-[10px] text-emerald-500">Sisa umur ~45 hari</p>
       </div>
-      <!-- Blower Fan -->
+      {/* Blower Fan */}
       <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm text-center">
         <div className="relative mx-auto w-16 h-16 mb-2">
           <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
@@ -61,7 +61,7 @@ export default function OperatorDashboard() {
         <p className="text-xs font-medium">Kipas Blower</p>
         <p className="text-[10px] text-amber-500">⚠ Ganti dalam ~12 hari</p>
       </div>
-      <!-- Filter -->
+      {/* Filter */}
       <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm text-center">
         <div className="relative mx-auto w-16 h-16 mb-2">
           <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
@@ -74,7 +74,7 @@ export default function OperatorDashboard() {
         <p className="text-xs font-medium">Filter Emisi</p>
         <p className="text-[10px] text-emerald-500">Sisa umur ~34 hari</p>
       </div>
-      <!-- Conveyor Belt -->
+      {/* Conveyor Belt */}
       <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm text-center">
         <div className="relative mx-auto w-16 h-16 mb-2">
           <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
@@ -87,7 +87,7 @@ export default function OperatorDashboard() {
         <p className="text-xs font-medium">Conveyor Belt</p>
         <p className="text-[10px] text-emerald-500">Sisa umur ~60 hari</p>
       </div>
-      <!-- Power Inverter -->
+      {/* Power Inverter */}
       <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm text-center">
         <div className="relative mx-auto w-16 h-16 mb-2">
           <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
@@ -103,10 +103,10 @@ export default function OperatorDashboard() {
     </div>
   </div>
 
-  <!-- Middle Row -->
+  {/* Middle Row */}
   <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
-    <!-- Waste Volume Analytics -->
+    {/* Waste Volume Analytics */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-2">
         <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider">Volume Sampah Harian (7 Hari Terakhir)</p>
@@ -172,7 +172,7 @@ export default function OperatorDashboard() {
       </div>
     </div>
 
-    <!-- Energy Monitor -->
+    {/* Energy Monitor */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-4">⚡ Smart Energy Monitor</p>
       <div className="grid grid-cols-2 gap-3 mb-4">
@@ -218,26 +218,26 @@ export default function OperatorDashboard() {
     </div>
   </div>
 
-  <!-- Bottom Row -->
+  {/* Bottom Row */}
   <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
 
-    <!-- AI Camera Feed -->
+    {/* AI Camera Feed */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-3">📷 AI Camera — Klasifikasi Sampah (Live)</p>
       <div className="relative bg-gray-900 rounded-lg h-40 flex items-center justify-center overflow-hidden">
-        <!-- Simulated camera feed -->
+        {/* Simulated camera feed */}
         <div className="absolute inset-0 opacity-20" style={{ background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px)" }}></div>
         <div className="scan-line absolute left-0 right-0 h-0.5 bg-emerald-400/50"></div>
         <div className="text-center z-10">
           <span className="text-3xl">📹</span>
           <p className="text-xs text-gray-400 mt-1">Camera Feed — Conveyor Belt</p>
         </div>
-        <!-- Detection boxes -->
+        {/* Detection boxes */}
         <div className="absolute top-3 left-3 border border-emerald-400 rounded px-1 text-[9px] text-emerald-400">Organik 62%</div>
         <div className="absolute top-3 right-3 border border-blue-400 rounded px-1 text-[9px] text-blue-400">Plastik 28%</div>
         <div className="absolute bottom-3 left-3 border border-amber-400 rounded px-1 text-[9px] text-amber-400">Kertas 8%</div>
         <div className="absolute bottom-3 right-3 border border-red-400 rounded px-1 text-[9px] text-red-400">Logam 2%</div>
-        <!-- Live indicator -->
+        {/* Live indicator */}
         <div className="absolute top-2 right-2 flex items-center gap-1 bg-red-600 rounded px-1.5 py-0.5">
           <span className="pulse-dot w-1.5 h-1.5 rounded-full bg-white inline-block"></span>
           <span className="text-[9px] text-white font-bold">LIVE</span>
@@ -246,7 +246,7 @@ export default function OperatorDashboard() {
       <p className="text-[10px] text-[var(--muted-foreground)] mt-2">✅ Tidak ada objek berbahaya terdeteksi</p>
     </div>
 
-    <!-- Machine Stats Today -->
+    {/* Machine Stats Today */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-3">📊 Statistik Mesin Hari Ini</p>
       <div className="space-y-3">
@@ -273,7 +273,7 @@ export default function OperatorDashboard() {
       </div>
     </div>
 
-    <!-- Maintenance Schedule -->
+    {/* Maintenance Schedule */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-3">🗓️ Jadwal Maintenance Terprediksi (AI)</p>
       <div className="space-y-2">

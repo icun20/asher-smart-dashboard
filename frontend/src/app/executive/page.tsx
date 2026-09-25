@@ -30,7 +30,7 @@ export default function ExecutiveDashboard() {
       <div className="max-w-6xl mx-auto mb-4"><a href="/" className="text-emerald-500 text-sm hover:underline">&larr; Kembali ke Menu Utama</a></div>
       
 
-  <!-- Header -->
+  {/* Header */}
   <div className="max-w-6xl mx-auto mb-6">
     <div className="flex items-center justify-between">
       <div>
@@ -48,10 +48,10 @@ export default function ExecutiveDashboard() {
     </div>
   </div>
 
-  <!-- KPI Cards Row -->
+  {/* KPI Cards Row */}
   <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
 
-    <!-- Carbon Credit Saved -->
+    {/* Carbon Credit Saved */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-1">Carbon Credit Tersimpan</p>
       <div className="flex items-end gap-1">
@@ -61,7 +61,7 @@ export default function ExecutiveDashboard() {
       <p className="text-xs text-emerald-500 mt-2">▲ +12.4% dari bulan lalu</p>
     </div>
 
-    <!-- Carbon Credit Value -->
+    {/* Carbon Credit Value */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-1">Estimasi Nilai Kredit Karbon</p>
       <div className="flex items-end gap-1">
@@ -72,7 +72,7 @@ export default function ExecutiveDashboard() {
       <p className="text-xs text-[var(--muted-foreground)] mt-2">@ $48.50 / Ton CO₂e</p>
     </div>
 
-    <!-- Waste Processed -->
+    {/* Waste Processed */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-1">Sampah Diproses (Bulan Ini)</p>
       <div className="flex items-end gap-1">
@@ -82,7 +82,7 @@ export default function ExecutiveDashboard() {
       <p className="text-xs text-blue-400 mt-2">▲ +8.1% dari bulan lalu</p>
     </div>
 
-    <!-- Waste Reduction -->
+    {/* Waste Reduction */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-1">Reduksi Volume Sampah</p>
       <div className="flex items-end gap-1">
@@ -93,19 +93,19 @@ export default function ExecutiveDashboard() {
     </div>
   </div>
 
-  <!-- Main Content Row -->
+  {/* Main Content Row */}
   <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
-    <!-- ESG Gauge -->
+    {/* ESG Gauge */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm flex flex-col items-center">
       <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-4 self-start">Skor ESG Perusahaan</p>
       <svg width="180" height="110" viewBox="0 0 180 110">
-        <!-- Background arc -->
+        {/* Background arc */}
         <path d="M 20 100 A 70 70 0 0 1 160 100" fill="none" stroke="var(--border)" strokeWidth="14" strokeLinecap="round"/>
-        <!-- Score arc -->
+        {/* Score arc */}
         <path d="M 20 100 A 70 70 0 0 1 160 100" fill="none" stroke="#10b981" strokeWidth="14" strokeLinecap="round"
               strokeDasharray="220" strokeDashoffset="44" className="gauge-ring" id="esgArc"/>
-        <!-- Score text -->
+        {/* Score text */}
         <text x="90" y="85" textAnchor="middle" fill="var(--foreground)" fontSize="32" fontWeight="bold">82</text>
         <text x="90" y="103" textAnchor="middle" fill="var(--muted-foreground)" fontSize="11">/100</text>
       </svg>
@@ -125,7 +125,7 @@ export default function ExecutiveDashboard() {
       </div>
     </div>
 
-    <!-- Monthly Trend Chart -->
+    {/* Monthly Trend Chart */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm col-span-2">
       <div className="flex items-center justify-between mb-4">
         <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider">Tren Bulanan — Sampah Diproses vs Carbon Credit</p>
@@ -135,7 +135,7 @@ export default function ExecutiveDashboard() {
         </div>
       </div>
       <div className="flex items-end gap-2 h-48">
-        <!-- Chart bars -->
+        {/* Chart bars */}
         <div className="flex-1 flex flex-col items-center gap-1">
           <div className="w-full flex gap-0.5 items-end h-40">
             <div className="flex-1 bg-blue-500/80 rounded-t bar-animate" style={{ height: "55%", animationDelay: "0.1s" }}></div>
@@ -182,10 +182,10 @@ export default function ExecutiveDashboard() {
     </div>
   </div>
 
-  <!-- Bottom Row -->
+  {/* Bottom Row */}
   <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
 
-    <!-- Carbon Breakdown -->
+    {/* Carbon Breakdown */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-4">Rincian Penghematan Karbon (September)</p>
       <div className="space-y-3">
@@ -217,7 +217,7 @@ export default function ExecutiveDashboard() {
       </div>
     </div>
 
-    <!-- Eksum Generator -->
+    {/* Eksum Generator */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-4">Generator Ringkasan Eksekutif (Eksum)</p>
       <div className="space-y-3">

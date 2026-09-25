@@ -8,7 +8,7 @@ export default function HSEDashboard() {
       <div className="max-w-6xl mx-auto mb-4"><a href="/" className="text-emerald-500 text-sm hover:underline">&larr; Kembali ke Menu Utama</a></div>
       
 
-  <!-- Header -->
+  {/* Header */}
   <div className="max-w-6xl mx-auto mb-6">
     <div className="flex items-center justify-between">
       <div>
@@ -25,11 +25,11 @@ export default function HSEDashboard() {
     </div>
   </div>
 
-  <!-- Emission Compliance Cards -->
+  {/* Emission Compliance Cards */}
   <div className="max-w-6xl mx-auto mb-6">
     <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-3">Pemantauan Emisi Cerobong — Real-Time</p>
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <!-- PM2.5 -->
+      {/* PM2.5 */}
       <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-[var(--muted-foreground)]">PM2.5</span>
@@ -39,7 +39,7 @@ export default function HSEDashboard() {
         <div className="mt-2 w-full h-2 rounded-full bg-[var(--border)]"><div className="h-2 rounded-full bg-emerald-500 transition-all duration-1000" style={{ width: "25%" }}></div></div>
         <p className="text-[10px] text-[var(--muted-foreground)] mt-1">Batas: 50 µg/m³ (PP No. 22/2021)</p>
       </div>
-      <!-- NO2 -->
+      {/* NO2 */}
       <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-[var(--muted-foreground)]">NO₂</span>
@@ -49,7 +49,7 @@ export default function HSEDashboard() {
         <div className="mt-2 w-full h-2 rounded-full bg-[var(--border)]"><div className="h-2 rounded-full bg-emerald-500 transition-all duration-1000" style={{ width: "18%" }}></div></div>
         <p className="text-[10px] text-[var(--muted-foreground)] mt-1">Batas: 0.1 ppm (WHO)</p>
       </div>
-      <!-- SO2 -->
+      {/* SO2 */}
       <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-[var(--muted-foreground)]">SO₂</span>
@@ -59,7 +59,7 @@ export default function HSEDashboard() {
         <div className="mt-2 w-full h-2 rounded-full bg-[var(--border)]"><div className="h-2 rounded-full bg-amber-500 transition-all duration-1000" style={{ width: "68%" }}></div></div>
         <p className="text-[10px] text-[var(--muted-foreground)] mt-1">Batas: 0.1 ppm (WHO)</p>
       </div>
-      <!-- CO -->
+      {/* CO */}
       <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-[var(--muted-foreground)]">CO</span>
@@ -72,10 +72,10 @@ export default function HSEDashboard() {
     </div>
   </div>
 
-  <!-- Middle Row -->
+  {/* Middle Row */}
   <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
-    <!-- Machine Temperature -->
+    {/* Machine Temperature */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-4">Suhu Ruang Pembakaran</p>
       <div className="flex items-center justify-center">
@@ -91,7 +91,7 @@ export default function HSEDashboard() {
       </div>
     </div>
 
-    <!-- Air Quality Index -->
+    {/* Air Quality Index */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-4">Indeks Kualitas Udara (AQI) — Sekitar Mesin</p>
       <div className="text-center mb-4">
@@ -112,7 +112,7 @@ export default function HSEDashboard() {
       </div>
     </div>
 
-    <!-- Operator Safety Status -->
+    {/* Operator Safety Status */}
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <p className="text-[var(--muted-foreground)] text-xs font-medium uppercase tracking-wider mb-4">Status Keselamatan Operator</p>
       <div className="space-y-3">
@@ -152,7 +152,7 @@ export default function HSEDashboard() {
     </div>
   </div>
 
-  <!-- Safety Alerts Log -->
+  {/* Safety Alerts Log */}
   <div className="max-w-6xl mx-auto">
     <div className="fade-in bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
