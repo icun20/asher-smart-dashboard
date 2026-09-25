@@ -21,10 +21,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={${geistSans.variable}  h-full antialiased}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
         <script src="https://cdn.tailwindcss.com"></script>
+        <script dangerouslySetInnerHTML={{__html: `
+          tailwind.config = {
+            theme: {
+              extend: {
+                colors: {
+                  background: 'var(--background)',
+                  foreground: 'var(--foreground)',
+                  card: 'var(--card)',
+                  border: 'var(--border)'
+                }
+              }
+            }
+          }
+        `}} />
       </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
