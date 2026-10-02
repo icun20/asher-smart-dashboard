@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { BarChart3, Activity, Wrench, Leaf, Settings, PanelLeftClose, PanelLeftOpen, ChevronDown, MonitorStop } from "lucide-react";
+import { BarChart3, Activity, Wrench, Leaf, Settings, PanelLeftClose, PanelLeftOpen, ChevronDown, MonitorStop, Menu } from "lucide-react";
 
 const navigationGroups = [
   {
@@ -32,14 +32,37 @@ const navigationGroups = [
 export function Sidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      setIsCollapsed(mobile);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
-    <div
-      className={cn(
-        "flex h-full flex-col bg-background border-r border-border transition-all duration-300 ease-in-out",
-        isCollapsed ? "w-[72px]" : "w-64"
+    <>
+      {/* Mobile overlay */}
+      {!isCollapsed && isMobile && (
+        <div 
+          className="fixed inset-0 bg-black/40 z-40 md:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setIsCollapsed(true)}
+        />
       )}
-    >
+      
+      <div
+        className={cn(
+          "flex h-full flex-col bg-background border-r border-border transition-all duration-300 ease-in-out z-50",
+          isMobile ? "fixed inset-y-0 left-0" : "relative",
+          isCollapsed && isMobile ? "-translate-x-full" : "translate-x-0",
+          isCollapsed && !isMobile ? "w-[72px]" : "w-64"
+        )}
+      >
       <div className={cn("flex h-16 shrink-0 items-center", isCollapsed ? "justify-center px-0" : "justify-between px-6")}>
         {!isCollapsed && (
           <div className="flex items-center">
@@ -103,5 +126,16 @@ export function Sidebar() {
         ))}
       </nav>
     </div>
+      
+      {/* Mobile Floating Toggle */}
+      {isCollapsed && isMobile && (
+        <button
+          onClick={() => setIsCollapsed(false)}
+          className="md:hidden fixed bottom-6 right-6 z-40 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-transform active:scale-95"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+      )}
+    </>
   );
 }

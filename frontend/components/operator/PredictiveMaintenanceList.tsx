@@ -5,25 +5,25 @@ import { Wrench, Clock, ActivitySquare } from "lucide-react";
 const tasks = [
   {
     id: 1,
-    action: "Ganti Kipas Blower",
+    action: "Replace Blower Fan",
     countdown: 12,
-    reason: "Anomali getaran bearing",
+    reason: "Bearing vibration anomaly",
     accuracy: 94,
     urgency: "high"
   },
   {
     id: 2,
-    action: "Bersihkan Ruang Plasma",
+    action: "Clean Plasma Chamber",
     countdown: 24,
-    reason: "Tumpukan abu sensor optik",
+    reason: "Ash buildup on optical sensor",
     accuracy: 88,
     urgency: "medium"
   },
   {
     id: 3,
-    action: "Ganti Filter Emisi",
+    action: "Replace Emission Filter",
     countdown: 34,
-    reason: "Tren partikulat PM2.5 meningkat",
+    reason: "PM2.5 particulate trend increasing",
     accuracy: 96,
     urgency: "low"
   }
@@ -58,10 +58,10 @@ export function PredictiveMaintenanceList() {
                 <div className="text-right">
                   <div className="flex items-center justify-end text-lg font-extrabold text-foreground">
                     <Clock className="h-4 w-4 mr-1.5 text-primary" />
-                    {task.countdown} Hari
+                    {task.countdown} Days
                   </div>
                   <div className="text-xs font-semibold text-primary mt-0.5">
-                    Akurasi AI: {task.accuracy}%
+                    AI Accuracy: {task.accuracy}%
                   </div>
                 </div>
               </div>

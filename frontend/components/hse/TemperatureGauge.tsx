@@ -40,7 +40,7 @@ export function TemperatureGauge() {
     <Card className="h-full border-border shadow-none flex flex-col">
       <CardHeader className="pb-0">
         <CardTitle className="text-xs text-slate-500 uppercase tracking-wider text-center">
-          Suhu Ruang Pembakaran
+          Combustion Chamber Temperature
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col items-center justify-center p-6 relative">

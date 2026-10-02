@@ -47,10 +47,10 @@ export default function DeviceOverview() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-semibold tracking-tight font-heading">
+          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight font-heading">
             {isCompareMode ? "Analytics & Comparison" : "Device Overview"}
           </h2>
-          <p className="text-slate-500 mt-1">
+          <p className="text-sm md:text-base text-slate-500 mt-1">
             {isCompareMode 
               ? "Deep dive into technical metrics across your fleet." 
               : "Monitor all active and inactive incinerator devices across locations."}
@@ -90,21 +90,21 @@ export default function DeviceOverview() {
                   {unit.status === 'maintenance' && <Activity className="text-slate-400 w-6 h-6 shrink-0" />}
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 mt-auto pt-6">
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
-                    <div className="text-xs text-slate-500 mb-1">Core Temp</div>
-                    <div className={cn("font-semibold text-lg", unit.metrics.coreTemp >= 900 ? "text-danger" : "text-safe")}>{unit.metrics.coreTemp}°C</div>
+                <div className="grid grid-cols-2 gap-3 mt-auto pt-6">
+                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2.5">
+                    <div className="text-[10px] sm:text-xs text-slate-500 mb-1">Core Temp</div>
+                    <div className={cn("font-semibold text-base sm:text-lg", unit.metrics.coreTemp >= 900 ? "text-danger" : "text-safe")}>{unit.metrics.coreTemp}°C</div>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
-                    <div className="text-xs text-slate-500 mb-1">Emissions</div>
-                    <div className={cn("font-semibold text-lg", unit.status === 'warning' ? "text-warning dark:text-amber-500" : "")}>{unit.status === 'warning' ? 'High NOx' : unit.status === 'active' ? 'Normal' : 'N/A'}</div>
+                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2.5">
+                    <div className="text-[10px] sm:text-xs text-slate-500 mb-1">Emissions</div>
+                    <div className={cn("font-semibold text-base sm:text-lg", unit.status === 'warning' ? "text-warning dark:text-amber-500" : "")}>{unit.status === 'warning' ? 'High NOx' : unit.status === 'active' ? 'Normal' : 'N/A'}</div>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
-                    <div className="text-xs text-slate-500 mb-1">Est. Value</div>
-                    <div className="font-semibold text-lg text-foreground">{unit.metrics.carbonCreditValue}</div>
+                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2.5">
+                    <div className="text-[10px] sm:text-xs text-slate-500 mb-1">Est. Value</div>
+                    <div className="font-semibold text-base sm:text-lg text-foreground">{unit.metrics.carbonCreditValue}</div>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 relative group/tooltip">
-                    <div className="text-xs text-slate-500 mb-1 flex items-center justify-between">
+                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2.5 relative group/tooltip">
+                    <div className="text-[10px] sm:text-xs text-slate-500 mb-1 flex items-center justify-between">
                       Maintenance
                     </div>
                     <div className="font-semibold flex items-center">

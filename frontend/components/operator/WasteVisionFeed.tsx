@@ -3,10 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Camera, Box } from "lucide-react";
 
 const classifications = [
-  { type: "Plastik", count: 42, color: "bg-blue-500" },
-  { type: "Organik", count: 128, color: "bg-green-500" },
-  { type: "Logam", count: 15, color: "bg-slate-500" },
-  { type: "B3", count: 2, color: "bg-danger" },
+  { type: "Plastic", count: 42, color: "bg-blue-500" },
+  { type: "Organic", count: 128, color: "bg-green-500" },
+  { type: "Metal", count: 15, color: "bg-slate-500" },
+  { type: "Hazardous (B3)", count: 2, color: "bg-danger" },
 ];
 
 export function WasteVisionFeed() {
@@ -32,10 +32,10 @@ export function WasteVisionFeed() {
           
           {/* Mock bounding boxes */}
           <div className="absolute top-[30%] left-[20%] w-[120px] h-[80px] border-2 border-green-500 rounded flex items-start p-1">
-            <span className="bg-green-500 text-white text-[10px] px-1 font-bold">Organik 92%</span>
+            <span className="bg-green-500 text-white text-[10px] px-1 font-bold">Organic 92%</span>
           </div>
           <div className="absolute top-[50%] left-[60%] w-[90px] h-[110px] border-2 border-blue-500 rounded flex items-start p-1">
-            <span className="bg-blue-500 text-white text-[10px] px-1 font-bold">Plastik 88%</span>
+            <span className="bg-blue-500 text-white text-[10px] px-1 font-bold">Plastic 88%</span>
           </div>
 
           <span className="text-slate-500 font-mono text-sm z-10">CAMERA_FEED_ACTIVE</span>

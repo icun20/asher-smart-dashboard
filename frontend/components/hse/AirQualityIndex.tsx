@@ -13,19 +13,19 @@ export function AirQualityIndex() {
   }, []);
   
   let aqi = 42;
-  let status = "BAIK";
-  let message = "Aman untuk operator tanpa masker";
+  let status = "GOOD";
+  let message = "Safe for operators without masks";
   let color = "text-safe";
   
   if (activeDevice.id === "1031") {
     aqi = 125;
-    status = "TIDAK SEHAT";
-    message = "Wajib menggunakan masker N95";
+    status = "UNHEALTHY";
+    message = "N95 mask required";
     color = "text-warning";
   } else if (activeDevice.id === "1030") {
     aqi = 15;
-    status = "SANGAT BAIK";
-    message = "Kualitas udara sangat bersih";
+    status = "EXCELLENT";
+    message = "Air quality is very clean";
     color = "text-safe";
   }
 
@@ -36,7 +36,7 @@ export function AirQualityIndex() {
     <Card className="border-border shadow-none">
       <CardHeader className="pb-2">
         <CardTitle className="text-xs text-slate-500 uppercase tracking-wider">
-          Indeks Kualitas Udara (AQI) — Sekitar Mesin
+          Air Quality Index (AQI) — Around Machine
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6 pb-8">

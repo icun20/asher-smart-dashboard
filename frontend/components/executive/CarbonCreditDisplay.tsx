@@ -9,12 +9,12 @@ export function CarbonCreditDisplay() {
   const isPositive = activeDevice.metrics.carbonCreditChange.startsWith("+");
   return (
     <Card className="flex flex-col md:flex-row overflow-hidden border border-border">
-      <div className="flex-1 p-8 flex flex-col justify-center">
+      <div className="flex-1 p-5 md:p-8 flex flex-col justify-center">
         <div className="inline-flex items-center text-sm font-semibold text-primary mb-2">
           <Leaf className="h-4 w-4 mr-1.5" />
           Carbon Credit Generation
         </div>
-        <h3 className="text-2xl font-semibold mb-2 font-heading tracking-tight">Estimated Value</h3>
+        <h3 className="text-xl md:text-2xl font-semibold mb-2 font-heading tracking-tight">Estimated Value</h3>
         <p className="text-slate-500 text-sm max-w-md mb-6 leading-relaxed">
           Track the estimated financial value generated from reducing carbon emissions based on the difference between baseline landfill emissions and the Asher's operations.
         </p>
@@ -26,8 +26,8 @@ export function CarbonCreditDisplay() {
         </div>
       </div>
       
-      <div className="bg-slate-50/50 dark:bg-slate-900 border-t md:border-t-0 md:border-l border-border p-8 flex flex-col items-center justify-center min-w-[300px]">
-        <div className="text-5xl font-bold font-heading tracking-tight text-foreground"><AnimatedNumber value={activeDevice.metrics.carbonCreditValue} /></div>
+      <div className="bg-slate-50/50 dark:bg-slate-900 border-t md:border-t-0 md:border-l border-border p-5 md:p-8 flex flex-col items-center justify-center md:min-w-[300px]">
+        <div className="text-4xl md:text-5xl font-bold font-heading tracking-tight text-foreground"><AnimatedNumber value={activeDevice.metrics.carbonCreditValue} /></div>
         <div className="flex items-center text-sm mt-3 text-slate-500">
           <span className={`flex items-center font-medium mr-2 ${isPositive ? "text-primary" : "text-amber-500"}`}>
             {isPositive ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}

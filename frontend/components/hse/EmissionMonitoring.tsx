@@ -6,18 +6,18 @@ import { useDevice } from "@/components/DeviceContext";
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case "AMAN": return "text-safe dark:text-safe";
-    case "WASPADA": return "text-warning dark:text-warning";
-    case "BAHAYA": return "text-danger dark:text-danger";
+    case "SAFE": return "text-safe dark:text-safe";
+    case "WARNING": return "text-warning dark:text-warning";
+    case "DANGER": return "text-danger dark:text-danger";
     default: return "text-slate-500";
   }
 };
 
 const getBarColor = (status: string) => {
   switch (status) {
-    case "AMAN": return "bg-safe";
-    case "WASPADA": return "bg-warning";
-    case "BAHAYA": return "bg-danger";
+    case "SAFE": return "bg-safe";
+    case "WARNING": return "bg-warning";
+    case "DANGER": return "bg-danger";
     default: return "bg-slate-200";
   }
 };
@@ -26,7 +26,7 @@ interface ParameterProps {
   label: string;
   value: string;
   unit: string;
-  status: "AMAN" | "WASPADA" | "BAHAYA";
+  status: "SAFE" | "WARNING" | "DANGER";
   percentage: number;
 }
 
@@ -35,9 +35,9 @@ const ParameterRow = ({ label, value, unit, status, percentage, mounted }: Param
     <div className="flex justify-between items-end">
       <div className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{label}</div>
       <div className={`text-xs font-bold flex items-center ${getStatusColor(status)}`}>
-        {status === "AMAN" && "✓ "}
-        {status === "WASPADA" && "▲ "}
-        {status === "BAHAYA" && "✕ "}
+        {status === "SAFE" && "✓ "}
+        {status === "WARNING" && "▲ "}
+        {status === "DANGER" && "✕ "}
         {status}
       </div>
     </div>
@@ -64,27 +64,27 @@ export function EmissionMonitoring() {
   
   // Mock data varying by device
   const data = activeDevice.id === "1031" ? { // Warning state
-    pm25: { value: "55.4", status: "BAHAYA", percentage: 85 },
-    no2: { value: "0.042", status: "WASPADA", percentage: 65 },
-    so2: { value: "0.088", status: "WASPADA", percentage: 75 },
-    co: { value: "12.5", status: "BAHAYA", percentage: 90 },
+    pm25: { value: "55.4", status: "DANGER", percentage: 85 },
+    no2: { value: "0.042", status: "WARNING", percentage: 65 },
+    so2: { value: "0.088", status: "WARNING", percentage: 75 },
+    co: { value: "12.5", status: "DANGER", percentage: 90 },
   } : activeDevice.id === "1030" ? { // Maintenance
-    pm25: { value: "0.0", status: "AMAN", percentage: 0 },
-    no2: { value: "0.000", status: "AMAN", percentage: 0 },
-    so2: { value: "0.000", status: "AMAN", percentage: 0 },
-    co: { value: "0.0", status: "AMAN", percentage: 0 },
+    pm25: { value: "0.0", status: "SAFE", percentage: 0 },
+    no2: { value: "0.000", status: "SAFE", percentage: 0 },
+    so2: { value: "0.000", status: "SAFE", percentage: 0 },
+    co: { value: "0.0", status: "SAFE", percentage: 0 },
   } : { // Active/Normal
-    pm25: { value: "12.4", status: "AMAN", percentage: 25 },
-    no2: { value: "0.018", status: "AMAN", percentage: 20 },
-    so2: { value: "0.068", status: "WASPADA", percentage: 60 },
-    co: { value: "2.1", status: "AMAN", percentage: 15 },
+    pm25: { value: "12.4", status: "SAFE", percentage: 25 },
+    no2: { value: "0.018", status: "SAFE", percentage: 20 },
+    so2: { value: "0.068", status: "WARNING", percentage: 60 },
+    co: { value: "2.1", status: "SAFE", percentage: 15 },
   };
 
   return (
     <Card className="h-full border-border shadow-none">
       <CardHeader className="pb-4">
         <CardTitle className="text-xs text-slate-500 uppercase tracking-wider">
-          Pemantauan Emisi Cerobong — Real-Time
+          Chimney Emission Monitoring — Real-Time
         </CardTitle>
       </CardHeader>
       <CardContent>
