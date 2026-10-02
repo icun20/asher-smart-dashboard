@@ -68,7 +68,7 @@ export function Sidebar() {
           <div className="flex items-center">
             <Leaf className="w-6 h-6 text-foreground mr-2" />
             <span className="text-lg font-bold tracking-tight text-foreground font-heading whitespace-nowrap">
-              The Asher
+              Asher EcoDash 
             </span>
           </div>
         )}

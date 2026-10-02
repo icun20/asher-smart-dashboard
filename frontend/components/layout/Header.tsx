@@ -111,7 +111,7 @@ export function Header() {
         
         <div className="flex items-center text-sm font-medium text-slate-600 hover:text-foreground cursor-pointer transition-colors">
           <User className="h-4 w-4 mr-2" />
-          IT Consultant
+          TerraSync Studio
         </div>
       </div>
     </header>

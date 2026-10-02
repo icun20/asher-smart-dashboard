@@ -16,7 +16,7 @@ export function CarbonCreditDisplay() {
         </div>
         <h3 className="text-xl md:text-2xl font-semibold mb-2 font-heading tracking-tight">Estimated Value</h3>
         <p className="text-slate-500 text-sm max-w-md mb-6 leading-relaxed">
-          Track the estimated financial value generated from reducing carbon emissions based on the difference between baseline landfill emissions and the Asher's operations.
+          Track the estimated financial value generated from reducing carbon emissions based on the difference between baseline landfill emissions and Asher EcoDash operations.
         </p>
         
         <div className="flex items-center gap-4">

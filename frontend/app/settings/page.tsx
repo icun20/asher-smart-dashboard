@@ -19,7 +19,7 @@ export default function SettingsPage() {
     <div className="space-y-6 max-w-6xl">
       <div>
         <h2 className="text-3xl font-semibold tracking-tight font-heading">Settings</h2>
-        <p className="text-slate-500 mt-1">Manage your account settings and The Asher preferences.</p>
+        <p className="text-slate-500 mt-1">Manage your account settings and Asher EcoDash preferences.</p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">

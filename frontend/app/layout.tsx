@@ -10,7 +10,7 @@ const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat
 const poppins = Poppins({ weight: ["300", "400", "500", "600", "700"], subsets: ["latin"], variable: "--font-poppins" });
 
 export const metadata: Metadata = {
-  title: "The ASHER Dashboard",
+  title: "Asher EcoDash Dashboard",
   description: "The world's most practical & effective waste management solution.",
 };
 
