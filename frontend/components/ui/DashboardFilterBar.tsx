@@ -111,7 +111,6 @@ export function DashboardFilterBar({
             </div>
             <div className="p-4">
               <Calendar
-                initialFocus
                 mode="range"
                 defaultMonth={date?.from}
                 selected={date}
