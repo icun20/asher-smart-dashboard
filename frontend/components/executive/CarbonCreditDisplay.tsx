@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Card } from "@/components/ui/Card";
-import { TrendingUp, TrendingDown, Leaf, ChevronDown, ChevronUp } from "lucide-react";
+import { TrendingUp, TrendingDown, Leaf, ChevronDown, ChevronUp, Info } from "lucide-react";
 import { useDevice } from "@/components/DeviceContext";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { calculateCarbonAccounting } from "@/lib/carbonEngine";
@@ -10,14 +10,21 @@ import { calculateCarbonAccounting } from "@/lib/carbonEngine";
 const MARKET_PRICE_TIERS = [
   { label: "$15", price: 15, desc: "Conservative Voluntary" },
   { label: "$25", price: 25, desc: "Verra VCS / Gold Std" },
-  { label: "$40", price: 40, desc: "Premium Removal / EU" },
+  { label: "$40", price: 40, desc: "Premium / EU ETS Ref" },
   { label: "$50", price: 50, desc: "Compliance Market" },
 ];
 
-export function CarbonCreditDisplay() {
+interface CarbonCreditDisplayProps {
+  pricePerTon: number;
+  onPriceChange: (price: number) => void;
+}
+
+export function CarbonCreditDisplay({
+  pricePerTon,
+  onPriceChange,
+}: CarbonCreditDisplayProps) {
   const { activeDevice } = useDevice();
   const [showDetails, setShowDetails] = useState(false);
-  const [pricePerTon, setPricePerTon] = useState<number>(25);
 
   const m = activeDevice.metrics;
   const isPositive = m.carbonCreditChange.startsWith("+");
@@ -29,6 +36,9 @@ export function CarbonCreditDisplay() {
     organicPct: m.organic,
     paperPct: m.paper,
     plasticPct: m.plastic,
+    landfillMcf: m.landfillMcf,
+    landfillOx: m.landfillOx,
+    landfillGasCaptureR: m.landfillGasCaptureR,
     carbonPriceUsdPerTon: pricePerTon,
     ashOutputTon: m.ashOutputTon,
   });
@@ -41,16 +51,26 @@ export function CarbonCreditDisplay() {
         <div className="flex-1 p-5 md:p-8 flex flex-col justify-center">
           <div className="inline-flex items-center text-sm font-semibold text-primary mb-2">
             <Leaf className="h-4 w-4 mr-1.5" />
-            IPCC 2006 Avoided Methane (CH₄) Carbon Credit
+            Ex-Ante Lifetime CH₄ Avoidance (IPCC 2006 + AR6 GWP₁₀₀ = 27.9)
           </div>
           <h3 className="text-xl md:text-2xl font-semibold mb-2 font-heading tracking-tight">
-            Estimated Carbon Credit Value
+            Estimated Carbon Credit Potential
           </h3>
-          <p className="text-slate-500 text-sm max-w-lg mb-5 leading-relaxed">
-            Calculated from avoided landfill methane (GWP₁₀₀ = 28) minus Scope 1 fossil plastic
-            emissions and Scope 2 regional electricity (IEA EF: {m.gridEmissionFactor} kg CO₂/kWh).
-            Biogenic CO₂ ({carbon.biogenicCo2MemoTon} t) is reported separately as carbon-neutral.
+          <p className="text-slate-500 text-sm max-w-lg mb-4 leading-relaxed">
+            Regional baseline: <strong className="text-foreground">{m.landfillBaselineLabel}</strong>.
+            Deducts Scope 1 fossil plastic CO₂, trace thermal N₂O/CH₄, and Scope 2 IEA grid power (
+            {m.gridEmissionFactor} kg CO₂/kWh).
           </p>
+
+          <div className="mb-4 flex items-start gap-2 rounded-lg border border-border bg-slate-50/70 dark:bg-slate-900/50 p-2.5 text-[11px] text-slate-500 max-w-lg">
+            <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-slate-400" />
+            <span>
+              <strong>Methodology Disclosure:</strong> Shows committed lifetime CH₄ avoided from
+              this month&apos;s diverted waste. Under Verra VCS / CDM ACM0022, actual credit
+              issuance is staged over 10–20 years via IPCC First-Order Decay (FOD) after 3rd-party
+              VVB verification.
+            </span>
+          </div>
 
           {/* Interactive Market Price Selector */}
           <div className="mb-5">
@@ -62,7 +82,7 @@ export function CarbonCreditDisplay() {
                 <button
                   type="button"
                   key={tier.price}
-                  onClick={() => setPricePerTon(tier.price)}
+                  onClick={() => onPriceChange(tier.price)}
                   className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${
                     pricePerTon === tier.price
                       ? "bg-primary/15 border-primary text-foreground font-semibold"
@@ -98,7 +118,7 @@ export function CarbonCreditDisplay() {
 
         <div className="bg-slate-50/50 dark:bg-slate-900 border-t md:border-t-0 md:border-l border-border p-5 md:p-8 flex flex-col items-center justify-center md:min-w-[310px] text-center">
           <div className="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1">
-            Monthly Credit Value (@ ${pricePerTon}/t)
+            Ex-Ante Monthly Value (@ ${pricePerTon}/t)
           </div>
           <div className="text-4xl md:text-5xl font-bold font-heading tracking-tight text-foreground">
             <AnimatedNumber value={formattedMonthly} />
@@ -137,7 +157,7 @@ export function CarbonCreditDisplay() {
       </div>
 
       {showDetails && (
-        <div className="border-t border-border bg-slate-50/70 dark:bg-slate-900/60 p-5 md:px-8 grid grid-cols-2 lg:grid-cols-5 gap-4 text-sm">
+        <div className="border-t border-border bg-slate-50/70 dark:bg-slate-900/60 p-5 md:px-8 grid grid-cols-2 lg:grid-cols-6 gap-4 text-sm">
           <div>
             <div className="text-xs text-slate-500 uppercase font-medium">
               Avoided CH₄ Baseline
@@ -147,53 +167,63 @@ export function CarbonCreditDisplay() {
               <span className="text-xs font-normal text-slate-400">tCO₂e</span>
             </div>
             <div className="text-[11px] text-slate-400">
-              {carbon.avoidedCh4Tons} tCH₄ × GWP 28
+              {carbon.avoidedCh4Tons} tCH₄ × 27.9
             </div>
           </div>
           <div>
             <div className="text-xs text-slate-500 uppercase font-medium">
-              Scope 1 Fossil CO₂
+              Scope 1A Fossil
             </div>
             <div className="text-lg font-bold text-danger mt-0.5">
-              -{carbon.scope1FossilCo2e.toFixed(1)}{" "}
+              -{carbon.scope1FossilPlasticCo2e.toFixed(1)}{" "}
               <span className="text-xs font-normal text-slate-400">tCO₂e</span>
             </div>
             <div className="text-[11px] text-slate-400">
-              Plastic fraction ({m.plastic > 0 ? `${m.plastic}%` : "16% std"})
+              Plastic ({m.plastic > 0 ? `${m.plastic}%` : "16% std"})
             </div>
           </div>
           <div>
             <div className="text-xs text-slate-500 uppercase font-medium">
-              Scope 2 Electricity
+              Scope 1B N₂O/CH₄
+            </div>
+            <div className="text-lg font-bold text-danger mt-0.5">
+              -{carbon.scope1NonCo2TraceCo2e.toFixed(2)}{" "}
+              <span className="text-xs font-normal text-slate-400">tCO₂e</span>
+            </div>
+            <div className="text-[11px] text-slate-400">Thermal trace (0.015/t)</div>
+          </div>
+          <div>
+            <div className="text-xs text-slate-500 uppercase font-medium">
+              Scope 2 Grid
             </div>
             <div className="text-lg font-bold text-warning mt-0.5">
               -{carbon.scope2ElectricityCo2e.toFixed(2)}{" "}
               <span className="text-xs font-normal text-slate-400">tCO₂e</span>
             </div>
             <div className="text-[11px] text-slate-400">
-              {m.energyConsumed} kWh × {m.gridEmissionFactor}
+              EF {m.gridEmissionFactor} kg/kWh
             </div>
           </div>
           <div>
             <div className="text-xs text-slate-500 uppercase font-medium">
-              Biogenic CO₂ (Memo)
+              Biogenic Memo
             </div>
             <div className="text-lg font-bold text-slate-600 dark:text-slate-300 mt-0.5">
               {carbon.biogenicCo2MemoTon.toFixed(1)}{" "}
               <span className="text-xs font-normal text-slate-400">tCO₂</span>
             </div>
-            <div className="text-[11px] text-slate-400">Carbon-neutral (0 penalty)</div>
+            <div className="text-[11px] text-slate-400">Neutral (0 penalty)</div>
           </div>
-          <div className="col-span-2 lg:col-span-1">
+          <div>
             <div className="text-xs text-slate-500 uppercase font-medium">
-              Net Verified Saved
+              Net Ex-Ante Saved
             </div>
             <div className="text-lg font-bold text-foreground mt-0.5">
               {carbon.netCarbonSavedCo2e.toFixed(1)}{" "}
               <span className="text-xs font-normal text-slate-400">tCO₂e/mo</span>
             </div>
             <div className="text-[11px] text-safe font-medium">
-              ~{carbon.annualizedCarbonSavedCo2e.toLocaleString("en-US")} tCO₂e/yr
+              +{carbon.scope3AvoidedHaulingMemoCo2e.toFixed(2)} t Scope 3 haul
             </div>
           </div>
         </div>

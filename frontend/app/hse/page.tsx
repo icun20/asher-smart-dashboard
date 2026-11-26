@@ -10,11 +10,12 @@ import { TemperatureGauge } from "@/components/hse/TemperatureGauge";
 import { AirQualityIndex } from "@/components/hse/AirQualityIndex";
 import { EmissionHistoryChart } from "@/components/hse/EmissionHistoryChart";
 import { SensorDataGrid } from "@/components/hse/SensorDataGrid";
+import { LabStackTestCard } from "@/components/hse/LabStackTestCard";
 import { IncidentLog } from "@/components/hse/IncidentLog";
 import { US_EPA_OSWI_STANDARDS, evaluateStackParameter } from "@/lib/hseStandards";
 
 export default function HSEDashboard() {
-  const { activeDevice } = useDevice();
+  const { activeDevice, thresholds } = useDevice();
   const [selectedFilter, setSelectedFilter] = useState("All Emissions");
 
   const showEmissions =
@@ -24,16 +25,21 @@ export default function HSEDashboard() {
 
   const handleExportHseCsv = () => {
     const m = activeDevice.metrics;
+    const lab = activeDevice.labStackTest;
     const rows = [
-      ["Parameter", "Reading", "Unit", "US EPA OSWI Limit", "Status"],
-      ["Stack PM", String(m.pm25), "mg/Nm3", String(US_EPA_OSWI_STANDARDS.pm.epaLimit), evaluateStackParameter("pm", m.pm25)],
-      ["Stack CO", String(m.co), "ppmv", String(US_EPA_OSWI_STANDARDS.co.epaLimit), evaluateStackParameter("co", m.co)],
-      ["Stack SO2", String(m.so2), "ppmv", String(US_EPA_OSWI_STANDARDS.so2.epaLimit), evaluateStackParameter("so2", m.so2)],
-      ["Stack NOx", String(m.no2), "ppmv", String(US_EPA_OSWI_STANDARDS.nox.epaLimit), evaluateStackParameter("nox", m.no2)],
-      ["Stack HCl", String(m.hcl), "ppmv", String(US_EPA_OSWI_STANDARDS.hcl.epaLimit), evaluateStackParameter("hcl", m.hcl)],
-      ["Chamber Temperature", String(m.coreTemp), "C", "300-1100 (Alarm >= 1050)", m.coreTemp >= 1050 ? "DANGER" : "SAFE"],
-      ["Perimeter Ambient AQI", String(m.aqi), "US EPA AQI", "<= 100", m.aqi > 100 ? "WARNING" : "SAFE"],
-      ["Filtration Health", `${m.filtrationHealthPct}%`, "HLC + Nanogreen", ">= 70%", m.filtrationHealthPct < 70 ? "DANGER" : "SAFE"],
+      ["Category", "Parameter", "Reading", "Unit", "Active / US EPA OSWI Limit", "Status"],
+      ["Inline Stack (7% O2)", "Exhaust O2 Reference", String(m.exhaustO2Pct), "% O2", "Normalized to 7.0% O2 dry", "INFO"],
+      ["Inline Stack (7% O2)", "Stack PM", String(m.pm25), "mg/Nm3", `<= ${thresholds.pmLimitMgNm3}`, evaluateStackParameter("pm", m.pm25, thresholds.pmLimitMgNm3)],
+      ["Inline Stack (7% O2)", "Stack CO", String(m.co), "ppmv", `<= ${US_EPA_OSWI_STANDARDS.co.epaLimit}`, evaluateStackParameter("co", m.co)],
+      ["Inline Stack (7% O2)", "Stack SO2", String(m.so2), "ppmv", `<= ${US_EPA_OSWI_STANDARDS.so2.epaLimit}`, evaluateStackParameter("so2", m.so2)],
+      ["Inline Stack (7% O2)", "Stack NOx", String(m.no2), "ppmv", `<= ${US_EPA_OSWI_STANDARDS.nox.epaLimit}`, evaluateStackParameter("nox", m.no2)],
+      ["Inline Stack (7% O2)", "Stack HCl", String(m.hcl), "ppmv", `<= ${US_EPA_OSWI_STANDARDS.hcl.epaLimit}`, evaluateStackParameter("hcl", m.hcl)],
+      ["Thermal", "Chamber Temperature", String(m.coreTemp), "C", `300-1100 (Alarm >= ${thresholds.tempAlarmC})`, m.coreTemp >= thresholds.tempAlarmC ? "DANGER" : "SAFE"],
+      ["Ambient", "Perimeter AQI", String(m.aqi), "US EPA AQI", "<= 100", m.aqi > 100 ? "WARNING" : "SAFE"],
+      ["Lab Test (Method 23)", "Dioxins / Furans", String(lab.dioxinsNgDscm), "ng/dscm", "<= 33", lab.dioxinsNgDscm < 33 ? "PASS" : "FAIL"],
+      ["Lab Test (Method 29)", "Cadmium (Cd)", String(lab.cadmiumUgDscm), "ug/dscm", "<= 18", lab.cadmiumUgDscm < 18 ? "PASS" : "FAIL"],
+      ["Lab Test (Method 29)", "Lead (Pb)", String(lab.leadUgDscm), "ug/dscm", "<= 226", lab.leadUgDscm < 226 ? "PASS" : "FAIL"],
+      ["Lab Test (Method 29)", "Mercury (Hg)", String(lab.mercuryUgDscm), "ug/dscm", "<= 74", lab.mercuryUgDscm < 74 ? "PASS" : "FAIL"],
     ];
 
     const csv = rows
@@ -57,8 +63,9 @@ export default function HSEDashboard() {
             HSE Compliance Dashboard
           </h2>
           <p className="text-sm md:text-base text-slate-500 mt-1">
-            US EPA 40 CFR 60 (OSWI) stack monitoring &amp; safety telemetry for{" "}
-            <span className="font-medium text-foreground">{activeDevice.name}</span> ({activeDevice.model})
+            US EPA 40 CFR 60 (OSWI) stack monitoring &amp; lab verification for{" "}
+            <span className="font-medium text-foreground">{activeDevice.name}</span> (
+            {activeDevice.model})
           </p>
         </div>
         <button
@@ -91,6 +98,7 @@ export default function HSEDashboard() {
           </div>
 
           <SensorDataGrid />
+          <LabStackTestCard />
           <EmissionHistoryChart />
         </>
       )}

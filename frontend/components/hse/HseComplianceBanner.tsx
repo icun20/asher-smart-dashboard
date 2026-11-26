@@ -6,15 +6,16 @@ import { useDevice } from "@/components/DeviceContext";
 import { evaluateStackParameter } from "@/lib/hseStandards";
 
 export function HseComplianceBanner() {
-  const { activeDevice } = useDevice();
+  const { activeDevice, thresholds } = useDevice();
   const m = activeDevice.metrics;
 
   const hasDanger =
-    evaluateStackParameter("pm", m.pm25) === "DANGER" ||
+    evaluateStackParameter("pm", m.pm25, thresholds.pmLimitMgNm3) === "DANGER" ||
     evaluateStackParameter("co", m.co) === "DANGER" ||
     evaluateStackParameter("so2", m.so2) === "DANGER" ||
     evaluateStackParameter("nox", m.no2) === "DANGER" ||
-    evaluateStackParameter("hcl", m.hcl) === "DANGER";
+    evaluateStackParameter("hcl", m.hcl) === "DANGER" ||
+    m.coreTemp >= thresholds.tempAlarmC;
 
   const isMaintenance = activeDevice.status === "maintenance";
 
@@ -42,7 +43,7 @@ export function HseComplianceBanner() {
           {isMaintenance ? "LOCKOUT" : hasDanger ? "EXCEEDANCE" : "COMPLIANT"}
         </div>
         <div className="text-xs text-slate-500 mt-1">
-          {m.epaCompliancePct.toFixed(1)}% operating hrs within OSWI caps
+          {m.epaCompliancePct.toFixed(1)}% hrs within OSWI caps • Ref O₂: {m.exhaustO2Pct}%
         </div>
       </div>
 
@@ -76,28 +77,29 @@ export function HseComplianceBanner() {
         </div>
         <div
           className={`text-2xl font-bold font-heading mt-2 ${
-            m.hcl >= 15 ? "text-danger" : m.hcl >= 11 ? "text-warning" : "text-foreground"
+            m.hcl >= 15 ? "text-danger" : m.hcl >= 11.25 ? "text-warning" : "text-foreground"
           }`}
         >
           {m.hcl.toFixed(1)}{" "}
           <span className="text-xs font-normal text-slate-400">ppmv</span>
         </div>
         <div className="text-xs text-slate-500 mt-1">
-          EPA limit: 15 ppmv @ 7% O₂ (PVC monitor)
+          EPA cap: 15 ppmv @ 7% O₂ (PVC monitor)
         </div>
       </div>
 
-      {/* Plume / Vapor Dissipation Spec */}
+      {/* Exhaust O2 & Vapor Dissipation */}
       <div className="bg-card border border-border rounded-xl p-4">
         <div className="flex items-center justify-between text-xs text-slate-500 font-medium uppercase">
-          <span>Vapor Dissipation</span>
+          <span>Stack O₂ / Plume</span>
           <Wind className="w-4 h-4 text-blue-500" />
         </div>
         <div className="text-2xl font-bold font-heading text-foreground mt-2">
-          {m.vaporDissipationRadiusM}
+          {m.exhaustO2Pct.toFixed(1)}%{" "}
+          <span className="text-xs font-normal text-slate-400">O₂</span>
         </div>
         <div className="text-xs text-slate-500 mt-1">
-          {activeDevice.model} rated plume radius
+          Normalized to 7% O₂ • Radius: {m.vaporDissipationRadiusM}
         </div>
       </div>
     </div>

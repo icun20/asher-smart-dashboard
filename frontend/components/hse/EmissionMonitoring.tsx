@@ -65,7 +65,7 @@ const ParameterRow = ({
         <span className="text-3xl font-bold font-heading">{value}</span>
         <span className="text-sm text-slate-500">{unit}</span>
       </div>
-      <span className="text-[11px] text-slate-400">EPA Cap: {limitText}</span>
+      <span className="text-[11px] text-slate-400">Cap: {limitText}</span>
     </div>
     <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-2">
       <div
@@ -77,23 +77,24 @@ const ParameterRow = ({
 );
 
 export function EmissionMonitoring() {
-  const { activeDevice } = useDevice();
+  const { activeDevice, thresholds } = useDevice();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const { pm25, no2, so2, co } = activeDevice.metrics;
+  const { pm25, no2, so2, co, exhaustO2Pct } = activeDevice.metrics;
+  const pmCap = thresholds.pmLimitMgNm3;
 
   const parameters: Omit<ParameterProps, "mounted">[] = [
     {
       label: US_EPA_OSWI_STANDARDS.pm.label,
       value: pm25.toFixed(1),
       unit: US_EPA_OSWI_STANDARDS.pm.unit,
-      limitText: `${US_EPA_OSWI_STANDARDS.pm.epaLimit} ${US_EPA_OSWI_STANDARDS.pm.unit}`,
-      status: evaluateStackParameter("pm", pm25),
-      percentage: (pm25 / US_EPA_OSWI_STANDARDS.pm.gaugeMax) * 100,
+      limitText: `${pmCap} ${US_EPA_OSWI_STANDARDS.pm.unit}`,
+      status: evaluateStackParameter("pm", pm25, pmCap),
+      percentage: (pm25 / Math.max(pmCap * 1.5, 45)) * 100,
     },
     {
       label: US_EPA_OSWI_STANDARDS.nox.label,
@@ -124,9 +125,14 @@ export function EmissionMonitoring() {
   return (
     <Card className="h-full border-border shadow-none">
       <CardHeader className="pb-4">
-        <CardTitle className="text-xs text-slate-500 uppercase tracking-wider">
-          Stack Exhaust Monitoring — US EPA 40 CFR 60 (OSWI, Dry Basis @ 7% O₂)
-        </CardTitle>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+          <CardTitle className="text-xs text-slate-500 uppercase tracking-wider">
+            Stack Exhaust Monitoring — US EPA 40 CFR 60 (OSWI)
+          </CardTitle>
+          <span className="text-[11px] text-slate-400">
+            Measured O₂: {exhaustO2Pct}% → Corrected to 7.0% O₂ dry basis
+          </span>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">

@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Leaf, ShieldCheck, FileCheck } from "lucide-react";
 import { useDevice } from "@/components/DeviceContext";
 import { calculateCarbonAccounting } from "@/lib/carbonEngine";
+import { evaluateStackParameter } from "@/lib/hseStandards";
 
 export function EsgScorecard() {
-  const { activeDevice } = useDevice();
+  const { activeDevice, thresholds } = useDevice();
   const m = activeDevice.metrics;
+
   const carbon = calculateCarbonAccounting({
     wasteProcessedTon: m.wasteProcessedTon,
     energyConsumedKwh: m.energyConsumedKwh,
@@ -16,9 +18,18 @@ export function EsgScorecard() {
     organicPct: m.organic,
     paperPct: m.paper,
     plasticPct: m.plastic,
+    landfillMcf: m.landfillMcf,
+    landfillOx: m.landfillOx,
+    landfillGasCaptureR: m.landfillGasCaptureR,
     carbonPriceUsdPerTon: m.carbonPricePerTonUsd,
     ashOutputTon: m.ashOutputTon,
   });
+
+  const hasStackBreach =
+    evaluateStackParameter("pm", m.pm25, thresholds.pmLimitMgNm3) === "DANGER" ||
+    evaluateStackParameter("co", m.co) === "DANGER" ||
+    evaluateStackParameter("hcl", m.hcl) === "DANGER" ||
+    m.coreTemp >= thresholds.tempAlarmC;
 
   const pillars = [
     {
@@ -29,20 +40,27 @@ export function EsgScorecard() {
       items: [
         { label: "Landfill Waste Diverted", value: `${m.wasteProcessedTon} tons/mo` },
         { label: "Thermal Mass Reduction", value: `${m.massReductionPct.toFixed(1)}%` },
-        { label: "Net Carbon Saved", value: `${carbon.netCarbonSavedCo2e} tCO₂e` },
-        { label: "Circular Ash Recovered", value: `${m.ashOutputTon.toFixed(2)} tons` },
+        { label: "Ex-Ante Net Carbon Saved", value: `${carbon.netCarbonSavedCo2e} tCO₂e` },
+        { label: "Scope 3 Avoided Hauling (Memo)", value: `${carbon.scope3AvoidedHaulingMemoCo2e} tCO₂e` },
       ],
     },
     {
       code: "S",
       title: "Social & HSE Safety",
       icon: ShieldCheck,
-      accent: "text-blue-600 dark:text-blue-400 bg-blue-500/15",
+      accent: hasStackBreach
+        ? "text-danger bg-danger/15"
+        : "text-blue-600 dark:text-blue-400 bg-blue-500/15",
       items: [
-        { label: "US EPA OSWI Compliance", value: `${m.epaCompliancePct.toFixed(1)}% hrs` },
+        {
+          label: "US EPA OSWI Status",
+          value: hasStackBreach
+            ? `Exceedance (${m.epaCompliancePct.toFixed(1)}%)`
+            : `${m.epaCompliancePct.toFixed(1)}% hrs compliant`,
+        },
+        { label: "Method 23/29 Lab Test", value: activeDevice.labStackTest.status },
         { label: "Perimeter Air Quality", value: `AQI ${m.aqi}` },
         { label: "Filtration Efficiency", value: `${m.filtrationHealthPct}%` },
-        { label: "Vapor Dissipation Spec", value: m.vaporDissipationRadiusM },
       ],
     },
     {
@@ -52,9 +70,12 @@ export function EsgScorecard() {
       accent: "text-purple-600 dark:text-purple-400 bg-purple-500/15",
       items: [
         { label: "Regional IEA Grid EF", value: `${m.gridEmissionFactor} kg/kWh` },
+        { label: "Landfill Baseline MCF / R", value: `${m.landfillMcf} / ${Math.round(m.landfillGasCaptureR * 100)}%` },
         { label: "Ash Batch Passport", value: m.latestAshBatchId },
-        { label: "Data Telemetry Uptime", value: activeDevice.status === "maintenance" ? "Service Lock" : "99.8%" },
-        { label: "Audit Trail Format", value: "GRI / ISO 14064" },
+        {
+          label: "Audit Sign-Off Status",
+          value: hasStackBreach ? "Exception Logged" : "GRI / ISO Aligned",
+        },
       ],
     },
   ];
@@ -84,10 +105,10 @@ export function EsgScorecard() {
               {pillar.items.map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-center justify-between text-xs sm:text-sm py-1.5 border-b border-border last:border-0"
+                  className="flex items-center justify-between text-xs sm:text-sm py-1.5 border-b border-border last:border-0 gap-2"
                 >
                   <span className="text-slate-500">{item.label}</span>
-                  <span className="font-semibold text-foreground">{item.value}</span>
+                  <span className="font-semibold text-foreground text-right">{item.value}</span>
                 </div>
               ))}
             </CardContent>

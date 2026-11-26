@@ -33,6 +33,7 @@ export type DetectionSource = "Trolley Cam" | "Photo Upload" | "Live Webcam" | "
 interface VisionCameraFeedProps {
   deviceSn: string;
   deviceName: string;
+  b3AlertEnabled?: boolean;
   detections: WasteDetectionBox[];
   confidenceThreshold: number;
   onConfidenceChange: (value: number) => void;
@@ -43,6 +44,7 @@ interface VisionCameraFeedProps {
 export function VisionCameraFeed({
   deviceSn,
   deviceName,
+  b3AlertEnabled = true,
   detections,
   confidenceThreshold,
   onConfidenceChange,
@@ -700,7 +702,7 @@ export function VisionCameraFeed({
 
       <CardContent className="flex-1 flex flex-col space-y-4">
         {/* Hazardous Pre-Load Warning Banner */}
-        {hasHazardous && (
+        {b3AlertEnabled && hasHazardous && (
           <div className="flex items-start gap-3 p-3 rounded-lg border border-danger/40 bg-danger/10 text-danger">
             <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 animate-pulse" />
             <div className="text-xs sm:text-sm">

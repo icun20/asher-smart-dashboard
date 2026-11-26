@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { calculateCarbonAccounting } from "@/lib/carbonEngine";
+import { THERMAL_ENVELOPE, US_EPA_OSWI_STANDARDS } from "@/lib/hseStandards";
 
 export type MaintenanceTask = {
   id: string;
@@ -13,6 +14,29 @@ export type MaintenanceTask = {
   urgency: "high" | "medium" | "low";
 };
 
+export type LabStackTestRecord = {
+  lastTestDate: string;
+  nextDueDate: string;
+  accreditedLab: string;
+  status: "Certified" | "Retest Scheduled";
+  dioxinsNgDscm: number; // Limit: 33 ng/dscm (EPA Method 23)
+  cadmiumUgDscm: number; // Limit: 18 µg/dscm (EPA Method 29)
+  leadUgDscm: number; // Limit: 226 µg/dscm (EPA Method 29)
+  mercuryUgDscm: number; // Limit: 74 µg/dscm (EPA Method 29)
+};
+
+export type AlertThresholds = {
+  tempAlarmC: number;
+  pmLimitMgNm3: number;
+  b3AutoAlert: boolean;
+};
+
+export const DEFAULT_ALERT_THRESHOLDS: AlertThresholds = {
+  tempAlarmC: THERMAL_ENVELOPE.DEFAULT_ALARM_OVERHEAT_C,
+  pmLimitMgNm3: US_EPA_OSWI_STANDARDS.pm.epaLimit,
+  b3AutoAlert: true,
+};
+
 export type DeviceMetrics = {
   // Executive / Carbon (Monthly figures aligned with official Pamarai G7/G8 specs)
   carbonCreditValue: string;
@@ -21,10 +45,14 @@ export type DeviceMetrics = {
   wasteProcessed: string;
   energyConsumed: string;
   // Numeric Analytics & Regional Localization
-  estimatedValue: number; // Monthly Carbon Credit USD (@ $25/tCO2e)
+  estimatedValue: number; // Monthly Ex-Ante Carbon Credit USD (@ $25/tCO2e)
   wasteProcessedTon: number; // Realistic monthly tons (A400: 20-100kg/hr, A250: 15-60kg/hr)
   energyConsumedKwh: number; // Realistic monthly kWh (A400EX: 16-28 kW/h, A400ES: 6-14 kW/h)
   gridEmissionFactor: number; // IEA regional kg CO2/kWh
+  landfillMcf: number; // Regional IPCC MCF
+  landfillOx: number; // Regional IPCC landfill soil oxidation OX
+  landfillGasCaptureR: number; // Regional landfill gas recovery factor (0..1)
+  landfillBaselineLabel: string;
   // Operator / Mass Balance & Circular Ash
   operatingHoursMonth: number;
   utilizationPct: number;
@@ -36,6 +64,7 @@ export type DeviceMetrics = {
   // HSE Stack Emissions (US EPA 40 CFR 60 OSWI, dry @ 7% O2) & Perimeter AQI
   aqi: number; // Ambient US EPA AQI around loading bay
   coreTemp: number; // Chamber temp °C (Pamarai spec: 300-1,100°C)
+  exhaustO2Pct: number; // Stack O2 % used to normalize readings to 7% O2 dry basis
   pm25: number; // Stack Particulate Matter (mg/Nm³, EPA limit: 30)
   no2: number; // Stack NOx (ppmv, EPA limit: 103)
   so2: number; // Stack SO2 (ppmv, EPA limit: 3.1)
@@ -63,6 +92,7 @@ export type Device = {
   timezoneLabel: string;
   status: "active" | "maintenance" | "warning";
   metrics: DeviceMetrics;
+  labStackTest: LabStackTestRecord;
   maintenanceTasks: MaintenanceTask[];
 };
 
@@ -77,6 +107,9 @@ function buildDevice(
     organicPct: rawMetrics.organic,
     paperPct: rawMetrics.paper,
     plasticPct: rawMetrics.plastic,
+    landfillMcf: rawMetrics.landfillMcf,
+    landfillOx: rawMetrics.landfillOx,
+    landfillGasCaptureR: rawMetrics.landfillGasCaptureR,
     carbonPriceUsdPerTon: rawMetrics.carbonPricePerTonUsd,
     ashOutputTon: rawMetrics.ashOutputTon,
   });
@@ -103,6 +136,16 @@ export const MOCK_DEVICES: Device[] = [
       timezone: "Asia/Kuala_Lumpur",
       timezoneLabel: "MYT",
       status: "active",
+      labStackTest: {
+        lastTestDate: "Sep 14, 2026",
+        nextDueDate: "Mar 14, 2027",
+        accreditedLab: "SIRIM QAS / ISO 17025 Stack Lab",
+        status: "Certified",
+        dioxinsNgDscm: 6.4,
+        cadmiumUgDscm: 2.8,
+        leadUgDscm: 24.5,
+        mercuryUgDscm: 11.2,
+      },
       maintenanceTasks: [
         {
           id: "alpha-1",
@@ -133,14 +176,19 @@ export const MOCK_DEVICES: Device[] = [
       wasteProcessedTon: 44.2,
       energyConsumedKwh: 10400,
       gridEmissionFactor: 0.585, // IEA Malaysia
+      landfillMcf: 0.8, // Unmanaged deep SWDS (SEA baseline)
+      landfillOx: 0.0,
+      landfillGasCaptureR: 0.0,
+      landfillBaselineLabel: "Unmanaged Deep SWDS (MCF 0.8, OX 0, R 0%)",
       operatingHoursMonth: 520,
       utilizationPct: 86,
       dailyThroughputKg: 1480,
-      ashOutputTon: 1.77, // 4.0%
+      ashOutputTon: 1.77,
       massReductionPct: 96.0,
       latestAshBatchId: "ASH-1029-084",
       aqi: 34,
       coreTemp: 865,
+      exhaustO2Pct: 7.4,
       pm25: 11.4,
       no2: 38.2,
       so2: 1.15,
@@ -167,6 +215,16 @@ export const MOCK_DEVICES: Device[] = [
       timezone: "America/New_York",
       timezoneLabel: "EST",
       status: "maintenance",
+      labStackTest: {
+        lastTestDate: "Aug 05, 2026",
+        nextDueDate: "Feb 05, 2027",
+        accreditedLab: "NELAP / EPA Accredited Emissions Lab",
+        status: "Certified",
+        dioxinsNgDscm: 5.1,
+        cadmiumUgDscm: 2.1,
+        leadUgDscm: 18.0,
+        mercuryUgDscm: 9.4,
+      },
       maintenanceTasks: [
         {
           id: "beta-1",
@@ -197,6 +255,10 @@ export const MOCK_DEVICES: Device[] = [
       wasteProcessedTon: 11.8,
       energyConsumedKwh: 3780,
       gridEmissionFactor: 0.386, // IEA USA
+      landfillMcf: 1.0, // Managed anaerobic landfill w/ partial LFG capture
+      landfillOx: 0.1,
+      landfillGasCaptureR: 0.35,
+      landfillBaselineLabel: "Managed US SWDS (MCF 1.0, OX 0.1, R 35%)",
       operatingHoursMonth: 210,
       utilizationPct: 35,
       dailyThroughputKg: 0,
@@ -205,6 +267,7 @@ export const MOCK_DEVICES: Device[] = [
       latestAshBatchId: "ASH-1030-031",
       aqi: 16,
       coreTemp: 28,
+      exhaustO2Pct: 20.9, // Ambient air while powered down
       pm25: 1.8,
       no2: 2.0,
       so2: 0.08,
@@ -231,6 +294,16 @@ export const MOCK_DEVICES: Device[] = [
       timezone: "Europe/Paris",
       timezoneLabel: "CET",
       status: "warning",
+      labStackTest: {
+        lastTestDate: "Jun 20, 2026",
+        nextDueDate: "Dec 20, 2026",
+        accreditedLab: "COFRAC Accredited Stack Lab (FR)",
+        status: "Retest Scheduled",
+        dioxinsNgDscm: 18.2,
+        cadmiumUgDscm: 6.5,
+        leadUgDscm: 58.0,
+        mercuryUgDscm: 22.4,
+      },
       maintenanceTasks: [
         {
           id: "gamma-1",
@@ -261,6 +334,10 @@ export const MOCK_DEVICES: Device[] = [
       wasteProcessedTon: 34.5,
       energyConsumedKwh: 5060,
       gridEmissionFactor: 0.056, // IEA France (nuclear-heavy low-carbon grid)
+      landfillMcf: 1.0, // EU Managed SWDS w/ 45% LFG capture
+      landfillOx: 0.1,
+      landfillGasCaptureR: 0.45,
+      landfillBaselineLabel: "EU Managed SWDS (MCF 1.0, OX 0.1, R 45%)",
       operatingHoursMonth: 460,
       utilizationPct: 76,
       dailyThroughputKg: 1150,
@@ -269,6 +346,7 @@ export const MOCK_DEVICES: Device[] = [
       latestAshBatchId: "ASH-1031-067",
       aqi: 114,
       coreTemp: 1068,
+      exhaustO2Pct: 8.9,
       pm25: 36.4,
       no2: 84.5,
       so2: 2.65,
@@ -291,15 +369,31 @@ type DeviceContextType = {
   activeDevice: Device;
   setActiveDevice: (device: Device) => void;
   devices: Device[];
+  thresholds: AlertThresholds;
+  updateThresholds: (next: AlertThresholds) => void;
+  resetThresholds: () => void;
 };
 
 const DeviceContext = createContext<DeviceContextType | undefined>(undefined);
 
 export function DeviceProvider({ children }: { children: ReactNode }) {
   const [activeDevice, setActiveDevice] = useState<Device>(MOCK_DEVICES[0]);
+  const [thresholds, setThresholds] = useState<AlertThresholds>(DEFAULT_ALERT_THRESHOLDS);
+
+  const updateThresholds = (next: AlertThresholds) => setThresholds(next);
+  const resetThresholds = () => setThresholds(DEFAULT_ALERT_THRESHOLDS);
 
   return (
-    <DeviceContext.Provider value={{ activeDevice, setActiveDevice, devices: MOCK_DEVICES }}>
+    <DeviceContext.Provider
+      value={{
+        activeDevice,
+        setActiveDevice,
+        devices: MOCK_DEVICES,
+        thresholds,
+        updateThresholds,
+        resetThresholds,
+      }}
+    >
       {children}
     </DeviceContext.Provider>
   );

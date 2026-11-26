@@ -15,7 +15,7 @@ import {
 } from "@/lib/wasteVision";
 
 export default function WasteVisionDashboard() {
-  const { activeDevice } = useDevice();
+  const { activeDevice, thresholds } = useDevice();
   const [detections, setDetections] = useState<WasteDetectionBox[]>(
     SIMULATION_SCENARIOS[0].detections
   );
@@ -166,6 +166,7 @@ export default function WasteVisionDashboard() {
           <VisionCameraFeed
             deviceSn={activeDevice.sn}
             deviceName={activeDevice.name}
+            b3AlertEnabled={thresholds.b3AutoAlert}
             detections={detections}
             confidenceThreshold={confidenceThreshold}
             onConfidenceChange={setConfidenceThreshold}

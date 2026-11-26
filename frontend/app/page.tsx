@@ -40,7 +40,7 @@ const ALL_METRICS: MetricDefinition[] = [
 ];
 
 export default function DeviceOverview() {
-  const { devices: fleet, setActiveDevice } = useDevice();
+  const { devices: fleet, setActiveDevice, thresholds } = useDevice();
   const [isCompareMode, setIsCompareMode] = useState(false);
 
   const [selectedDevices, setSelectedDevices] = useState<string[]>(["1029", "1031"]);
@@ -134,7 +134,7 @@ export default function DeviceOverview() {
                     <div
                       className={cn(
                         "font-semibold text-base sm:text-lg",
-                        unit.metrics.coreTemp >= 1050
+                        unit.metrics.coreTemp >= thresholds.tempAlarmC
                           ? "text-danger"
                           : unit.metrics.coreTemp < 100
                           ? "text-slate-400"
@@ -149,14 +149,14 @@ export default function DeviceOverview() {
                     <div
                       className={cn(
                         "font-semibold text-base sm:text-lg",
-                        unit.status === "warning"
+                        unit.metrics.pm25 >= thresholds.pmLimitMgNm3 || unit.status === "warning"
                           ? "text-danger"
                           : unit.status === "active"
                           ? "text-safe"
                           : "text-slate-400"
                       )}
                     >
-                      {unit.status === "warning"
+                      {unit.metrics.pm25 >= thresholds.pmLimitMgNm3 || unit.status === "warning"
                         ? "EPA Alert"
                         : unit.status === "active"
                         ? "Compliant"
@@ -164,7 +164,7 @@ export default function DeviceOverview() {
                     </div>
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2.5">
-                    <div className="text-[11px] text-slate-500 mb-1">Est. Value</div>
+                    <div className="text-[11px] text-slate-500 mb-1">Est. Credit / mo</div>
                     <div className="font-semibold text-base sm:text-lg text-foreground">
                       {unit.metrics.carbonCreditValue}
                     </div>

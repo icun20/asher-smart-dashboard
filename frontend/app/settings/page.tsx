@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { User, Server, Bell, Palette, Shield, Save, Check, Sun, Moon, Monitor } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { User, Server, Bell, Palette, Shield, Save, Check, Sun, Moon, Monitor, RotateCcw } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
   Card,
@@ -23,7 +23,8 @@ const tabs = [
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
-  const { devices, activeDevice, setActiveDevice } = useDevice();
+  const { devices, activeDevice, setActiveDevice, thresholds, updateThresholds, resetThresholds } =
+    useDevice();
   const { theme, setTheme } = useTheme();
 
   // Profile state
@@ -31,24 +32,30 @@ export default function SettingsPage() {
   const [profileEmail, setProfileEmail] = useState("johndoe@theasher.com");
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
-  // Threshold state (aligned with Pamarai G7/G8 300-1100°C spec & US EPA OSWI)
-  const [tempThreshold, setTempThreshold] = useState(1050);
-  const [pmLimit, setPmLimit] = useState(30);
-  const [b3AutoAlert, setB3AutoAlert] = useState(true);
+  // Draft threshold state synced with shared DeviceContext
+  const [tempThreshold, setTempThreshold] = useState(thresholds.tempAlarmC);
+  const [pmLimit, setPmLimit] = useState(thresholds.pmLimitMgNm3);
+  const [b3AutoAlert, setB3AutoAlert] = useState(thresholds.b3AutoAlert);
+
+  useEffect(() => {
+    setTempThreshold(thresholds.tempAlarmC);
+    setPmLimit(thresholds.pmLimitMgNm3);
+    setB3AutoAlert(thresholds.b3AutoAlert);
+  }, [thresholds]);
 
   const showSaved = (message: string) => {
     setSavedNotice(message);
-    setTimeout(() => setSavedNotice(null), 2500);
+    setTimeout(() => setSavedNotice(null), 2800);
   };
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 max-w-6xl pb-8">
       <div>
         <h2 className="text-2xl md:text-3xl font-semibold tracking-tight font-heading">
           Settings
         </h2>
         <p className="text-sm md:text-base text-slate-500 mt-1">
-          Manage your account, alert thresholds, and Asher EcoDash preferences.
+          Manage your account, live HSE alert thresholds, and Asher EcoDash preferences.
         </p>
       </div>
 
@@ -169,6 +176,9 @@ export default function SettingsPage() {
                       <div className="text-xs text-slate-500 mt-0.5">
                         SN: {unit.sn} • {unit.location} • Grid EF: {unit.metrics.gridEmissionFactor} kg CO₂/kWh
                       </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">
+                        Baseline: {unit.metrics.landfillBaselineLabel}
+                      </div>
                     </div>
                     <button
                       type="button"
@@ -176,7 +186,7 @@ export default function SettingsPage() {
                         setActiveDevice(unit);
                         showSaved(`Active unit switched to ${unit.name}.`);
                       }}
-                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors shrink-0 ${
                         activeDevice.id === unit.id
                           ? "bg-primary text-primary-foreground"
                           : "border border-border bg-card hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -193,9 +203,9 @@ export default function SettingsPage() {
           {activeTab === "alerts" && (
             <Card className="border-border shadow-none">
               <CardHeader>
-                <CardTitle>Alert Thresholds</CardTitle>
+                <CardTitle>Live HSE &amp; Vision Alert Thresholds</CardTitle>
                 <CardDescription>
-                  Configure when thermal, emission, and AI Vision safety alerts are triggered.
+                  Changes applied here immediately update alarm states across HSE, Overview, and ESG compliance monitors.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -218,21 +228,21 @@ export default function SettingsPage() {
                     className="w-full accent-danger"
                   />
                   <p className="text-xs text-slate-500">
-                    Temperatures above this threshold trigger automatic blower throttling alerts.
+                    Temperatures above this threshold trigger an overheating alarm on HSE &amp; ESG monitors.
                   </p>
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-border">
                   <div className="flex justify-between">
                     <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Stack PM Compliance Cap (mg/Nm³ @ 7% O₂ — US EPA OSWI: 30)
+                      Stack PM Compliance Cap (mg/Nm³ @ 7% O₂ — Statutory US EPA OSWI: 30)
                     </label>
                     <span className="text-sm text-danger font-bold">{pmLimit} mg/Nm³</span>
                   </div>
                   <input
                     type="range"
                     min={15}
-                    max={60}
+                    max={45}
                     step={1}
                     value={pmLimit}
                     onChange={(e) => setPmLimit(Number(e.target.value))}
@@ -246,7 +256,7 @@ export default function SettingsPage() {
                       AI Vision Hazardous (B3) Pre-Load Alarm
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Immediately flag operators if batteries, pressurized cans, or e-waste are detected on the loading trolley.
+                      Flag operators if batteries, pressurized cans, or e-waste are detected on the loading trolley.
                     </p>
                   </div>
                   <input
@@ -257,14 +267,32 @@ export default function SettingsPage() {
                   />
                 </div>
               </CardContent>
-              <CardFooter className="border-t border-border px-6 py-4">
+              <CardFooter className="border-t border-border px-6 py-4 flex flex-wrap items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => showSaved("Alert thresholds updated.")}
+                  onClick={() => {
+                    updateThresholds({
+                      tempAlarmC: tempThreshold,
+                      pmLimitMgNm3: pmLimit,
+                      b3AutoAlert,
+                    });
+                    showSaved("Live HSE alert thresholds updated across all dashboards.");
+                  }}
                   className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors flex items-center"
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  Save Thresholds
+                  Apply Live Thresholds
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetThresholds();
+                    showSaved("Thresholds reset to US EPA OSWI & Pamarai defaults.");
+                  }}
+                  className="border border-border bg-card px-3.5 py-2 rounded-md text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center text-slate-600 dark:text-slate-300"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Reset Defaults
                 </button>
               </CardFooter>
             </Card>

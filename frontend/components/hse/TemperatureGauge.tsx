@@ -6,7 +6,7 @@ import { useDevice } from "@/components/DeviceContext";
 import { THERMAL_ENVELOPE } from "@/lib/hseStandards";
 
 export function TemperatureGauge() {
-  const { activeDevice } = useDevice();
+  const { activeDevice, thresholds } = useDevice();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -14,11 +14,12 @@ export function TemperatureGauge() {
   }, []);
 
   const temp = activeDevice.metrics.coreTemp;
+  const alarmC = thresholds.tempAlarmC;
   let status = "OPTIMAL";
   let statusColor = "text-safe";
   let strokeColor = "var(--safe)";
 
-  if (temp >= THERMAL_ENVELOPE.ALARM_OVERHEAT_C) {
+  if (temp >= alarmC) {
     status = "OVERHEATING";
     statusColor = "text-danger";
     strokeColor = "var(--danger)";
@@ -87,8 +88,9 @@ export function TemperatureGauge() {
           </div>
         </div>
         <div className="text-[11px] text-slate-400 text-center mt-2">
-          Rated Spec: {THERMAL_ENVELOPE.MIN_RATED_C}–{THERMAL_ENVELOPE.MAX_RATED_C.toLocaleString("en-US")}°C • Alarm ≥{" "}
-          {THERMAL_ENVELOPE.ALARM_OVERHEAT_C.toLocaleString("en-US")}°C
+          Rated Spec: {THERMAL_ENVELOPE.MIN_RATED_C}–
+          {THERMAL_ENVELOPE.MAX_RATED_C.toLocaleString("en-US")}°C • Active Alarm ≥{" "}
+          {alarmC.toLocaleString("en-US")}°C
         </div>
       </CardContent>
     </Card>

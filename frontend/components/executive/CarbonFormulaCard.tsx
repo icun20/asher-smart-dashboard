@@ -17,6 +17,9 @@ export function CarbonFormulaCard() {
     organicPct: m.organic,
     paperPct: m.paper,
     plasticPct: m.plastic,
+    landfillMcf: m.landfillMcf,
+    landfillOx: m.landfillOx,
+    landfillGasCaptureR: m.landfillGasCaptureR,
     carbonPriceUsdPerTon: m.carbonPricePerTonUsd,
     ashOutputTon: m.ashOutputTon,
   });
@@ -26,26 +29,25 @@ export function CarbonFormulaCard() {
       <CardHeader className="flex flex-row items-center space-x-2 pb-4">
         <Calculator className="h-5 w-5 text-slate-400" />
         <CardTitle className="text-lg">
-          Carbon Accounting Engine (IPCC 2006 &amp; GHG Protocol)
+          Carbon Accounting Engine (IPCC 2006 / AR6 &amp; GHG Protocol)
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="bg-slate-100 dark:bg-slate-800/80 p-4 rounded-lg border border-border font-mono text-xs overflow-x-auto space-y-2">
           <p className="text-slate-700 dark:text-slate-200 leading-relaxed">
-            <span className="text-safe font-bold">1. Landfill Baseline (Avoided CH₄):</span>{" "}
-            W × DOC ({carbon.docFraction}) × DOCf (0.5) × MCF (1.0) × F (0.5) × (16/12) × GWP₁₀₀ (28)
+            <span className="text-safe font-bold">1. Regional Landfill Baseline (Ex-Ante CH₄):</span>{" "}
+            W ({m.wasteProcessedTon}t) × DOC ({carbon.docFraction}) × DOCf (0.5) × MCF ({carbon.mcf}) × F (0.5) × (16/12) × (1 − R {carbon.landfillGasCaptureR}) × (1 − OX {carbon.oxidationFactorOx}) × AR6 GWP₁₀₀ (27.9)
             = <span className="font-bold">{carbon.baselineLandfillCo2e} tCO₂e</span>
           </p>
           <p className="text-slate-700 dark:text-slate-200 leading-relaxed">
-            <span className="text-danger font-bold">2. ASHER Actual (Scope 1 + 2):</span>{" "}
-            Fossil Plastic CO₂ ({carbon.scope1FossilCo2e} t) + Grid Power ({m.energyConsumed} kWh ×{" "}
-            {m.gridEmissionFactor} ÷ 1,000 = {carbon.scope2ElectricityCo2e} t) ={" "}
+            <span className="text-danger font-bold">2. ASHER Actual (Scope 1A+1B + Scope 2):</span>{" "}
+            Fossil Plastic ({carbon.scope1FossilPlasticCo2e}t) + Thermal N₂O/CH₄ ({carbon.scope1NonCo2TraceCo2e}t) + Grid ({m.energyConsumed} kWh ×{" "}
+            {m.gridEmissionFactor} ÷ 1,000 = {carbon.scope2ElectricityCo2e}t) ={" "}
             <span className="font-bold">{carbon.totalAsherEmissionsCo2e} tCO₂e</span>
           </p>
           <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
-            <span className="font-semibold">3. Biogenic CO₂ Memo (Neutral):</span>{" "}
-            Organic &amp; paper combustion ({carbon.biogenicCo2MemoTon} tCO₂) excluded from Scope 1
-            penalty per GHG Protocol.
+            <span className="font-semibold">3. Separate Memo Disclosures:</span>{" "}
+            Biogenic CO₂ ({carbon.biogenicCo2MemoTon} tCO₂, neutral per GHG Protocol) • Scope 3 Avoided Refuse Hauling ({carbon.scope3AvoidedHaulingMemoCo2e} tCO₂e, excluded from CH₄ credits).
           </p>
         </div>
 
@@ -58,7 +60,7 @@ export function CarbonFormulaCard() {
             </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-xs text-slate-500 mb-1">Avoided Methane</span>
+            <span className="text-xs text-slate-500 mb-1">Avoided CH₄ (Lifetime)</span>
             <span className="text-xl font-bold text-safe">
               {carbon.avoidedCh4Tons}{" "}
               <span className="text-xs font-normal text-slate-400">tCH₄</span>
@@ -72,7 +74,7 @@ export function CarbonFormulaCard() {
             </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-xs text-slate-500 mb-1">Net Carbon Saved</span>
+            <span className="text-xs text-slate-500 mb-1">Net Ex-Ante Saved</span>
             <span className="text-xl font-bold text-safe">
               {carbon.netCarbonSavedCo2e}{" "}
               <span className="text-xs font-normal text-slate-400">tCO₂e</span>

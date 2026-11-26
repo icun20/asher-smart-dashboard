@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Dict
 
-app = FastAPI(title="ASHER Smart IT API", version="2.1.0")
+app = FastAPI(title="ASHER Smart IT API", version="2.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,7 +20,14 @@ class WasteData(BaseModel):
     organic_pct: float = Field(default=50.0, ge=0.0, le=100.0, description="Organic waste %")
     paper_pct: float = Field(default=20.0, ge=0.0, le=100.0, description="Paper/cardboard waste %")
     plastic_pct: float = Field(default=15.0, ge=0.0, le=100.0, description="Fossil plastic waste %")
-    methane_gwp: float = Field(default=28.0, description="IPCC AR5/AR6 GWP100 factor for CH4")
+    landfill_mcf: float = Field(default=0.80, ge=0.4, le=1.0, description="IPCC 2006 MCF")
+    landfill_ox: float = Field(default=0.0, ge=0.0, le=0.2, description="IPCC 2006 cover soil OX")
+    landfill_gas_capture_r: float = Field(
+        default=0.0, ge=0.0, le=0.9, description="Regional LFG capture rate (0..1)"
+    )
+    methane_gwp_ar6: float = Field(
+        default=27.9, description="Official IPCC AR6 GWP100 for non-fossil CH4"
+    )
     grid_emission_factor: float = Field(
         default=0.585, description="IEA regional grid emission factor (kg CO2/kWh)"
     )
@@ -39,13 +46,20 @@ class VisionBatchRequest(BaseModel):
 
 
 US_EPA_OSWI_LIMITS = {
-    "standard": "US EPA 40 CFR Part 60 Subpart EEEE (OSWI @ 7% O2 dry basis)",
-    "limits": {
+    "standard": "US EPA 40 CFR Part 60 Subpart EEEE (Table 1 - OSWI @ 7% O2 dry basis)",
+    "inline_cems_limits": {
         "pm_mg_nm3": 30.0,
         "co_ppmv": 40.0,
         "so2_ppmv": 3.1,
         "nox_ppmv": 103.0,
         "hcl_ppmv": 15.0,
+        "reference_o2_pct": 7.0,
+    },
+    "periodic_lab_test_limits": {
+        "dioxins_furans_ng_dscm": {"limit": 33.0, "method": "US EPA Method 23"},
+        "cadmium_ug_dscm": {"limit": 18.0, "method": "US EPA Method 29"},
+        "lead_ug_dscm": {"limit": 226.0, "method": "US EPA Method 29"},
+        "mercury_ug_dscm": {"limit": 74.0, "method": "US EPA Method 29"},
     },
     "thermal_envelope_c": {
         "rated_min": 300,
@@ -104,7 +118,7 @@ WASTE_CATEGORIES: Dict[str, Dict[str, object]] = {
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "service": "ASHER Smart IT API", "version": "2.1.0"}
+    return {"status": "ok", "service": "ASHER Smart IT API", "version": "2.2.0"}
 
 
 @app.get("/api/hse/standards")
@@ -115,39 +129,58 @@ def get_hse_standards():
 @app.post("/api/calculate-carbon")
 def calculate_carbon_credit(data: WasteData):
     """
-    IPCC 2006 Vol. 5 Methane Avoidance + GHG Protocol Biogenic vs Fossil CO2 separation.
+    IPCC 2006 Vol. 5 Ex-Ante Lifetime Committed CH4 Avoidance + IPCC AR6 GWP100 (27.9)
+    + GHG Protocol Scope 1 Fossil/N2O, Scope 2 IEA Grid, Biogenic Memo & Scope 3 Hauling Memo.
     """
     eff_organic = data.organic_pct / 100.0
     eff_paper = data.paper_pct / 100.0
     eff_plastic = data.plastic_pct / 100.0
 
-    # 1. IPCC 2006 Avoided Landfill Methane
+    # 1. IPCC 2006 Avoided Landfill Methane (with regional MCF, OX, and LFG recovery R)
     doc_fraction = (eff_organic * 0.15) + (eff_paper * 0.40)
-    avoided_ch4_tons = data.tonnage * doc_fraction * 0.50 * 1.0 * 0.50 * (16.0 / 12.0)
-    baseline_co2e = avoided_ch4_tons * data.methane_gwp
+    avoided_ch4_tons = (
+        data.tonnage
+        * doc_fraction
+        * 0.50
+        * data.landfill_mcf
+        * 0.50
+        * (16.0 / 12.0)
+        * (1.0 - data.landfill_gas_capture_r)
+        * (1.0 - data.landfill_ox)
+    )
+    baseline_co2e = avoided_ch4_tons * data.methane_gwp_ar6
 
     # 2. GHG Protocol Biogenic CO2 (Memo Item - Carbon Neutral)
     biogenic_co2_memo = data.tonnage * ((eff_organic * 0.55) + (eff_paper * 1.25))
 
-    # 3. Scope 1 Direct Fossil CO2 (Plastics only)
+    # 3. Scope 1 Direct Emissions (Fossil Plastic CO2 + Trace Thermal N2O/CH4)
     scope1_fossil_co2e = data.tonnage * eff_plastic * 0.85 * 0.75 * 0.70 * (44.0 / 12.0)
+    scope1_non_co2_trace = data.tonnage * 0.015
+    scope1_total_co2e = scope1_fossil_co2e + scope1_non_co2_trace
 
     # 4. Scope 2 Electricity Emissions (IEA Regional Grid EF)
     scope2_electricity_co2e = (data.electricity_kwh * data.grid_emission_factor) / 1000.0
 
-    total_asher_emissions = scope1_fossil_co2e + scope2_electricity_co2e
+    # 5. Scope 3 Avoided Hauling Transport (Memo Item only)
+    scope3_avoided_hauling_memo = data.tonnage * 0.003
+
+    total_asher_emissions = scope1_total_co2e + scope2_electricity_co2e
     net_carbon_saved = max(0.0, baseline_co2e - total_asher_emissions)
 
     return {
         "status": "success",
-        "methodology": "IPCC 2006 Vol. 5 + GHG Protocol (Biogenic/Fossil Split)",
+        "methodology": "IPCC 2006 Vol. 5 (Ex-Ante Lifetime Avoidance) + IPCC AR6 GWP100 (27.9) + GHG Protocol",
+        "registry_note": "Actual Verra/CDM ACM0022 issuance follows a 10-20 year IPCC First-Order Decay (FOD) schedule.",
         "input_tonnage": data.tonnage,
         "doc_fraction": round(doc_fraction, 4),
         "avoided_ch4_tons": round(avoided_ch4_tons, 2),
         "baseline_emissions_tco2e": round(baseline_co2e, 2),
         "biogenic_co2_memo_tons": round(biogenic_co2_memo, 2),
-        "scope1_fossil_tco2e": round(scope1_fossil_co2e, 2),
+        "scope1_fossil_plastic_tco2e": round(scope1_fossil_co2e, 2),
+        "scope1_non_co2_trace_tco2e": round(scope1_non_co2_trace, 2),
+        "scope1_total_tco2e": round(scope1_total_co2e, 2),
         "scope2_electricity_tco2e": round(scope2_electricity_co2e, 2),
+        "scope3_avoided_hauling_memo_tco2e": round(scope3_avoided_hauling_memo, 2),
         "asher_emissions_tco2e": round(total_asher_emissions, 2),
         "net_carbon_saved_tco2e": round(net_carbon_saved, 2),
         "estimated_credit_value_usd": round(net_carbon_saved * data.carbon_price_usd, 2),

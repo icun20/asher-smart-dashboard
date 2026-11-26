@@ -9,10 +9,12 @@ import { FileDown, Download } from "lucide-react";
 import { useDevice } from "@/components/DeviceContext";
 import { DashboardFilterBar } from "@/components/ui/DashboardFilterBar";
 import { calculateCarbonAccounting } from "@/lib/carbonEngine";
+import { evaluateStackParameter } from "@/lib/hseStandards";
 
 export default function ExecutiveDashboard() {
-  const { activeDevice } = useDevice();
+  const { activeDevice, thresholds } = useDevice();
   const [selectedScope, setSelectedScope] = useState("All ESG Modules");
+  const [pricePerTon, setPricePerTon] = useState<number>(25);
 
   const showScorecard =
     selectedScope === "All ESG Modules" || selectedScope === "ESG Pillar Scorecard";
@@ -34,26 +36,39 @@ export default function ExecutiveDashboard() {
       organicPct: m.organic,
       paperPct: m.paper,
       plasticPct: m.plastic,
-      carbonPriceUsdPerTon: m.carbonPricePerTonUsd,
+      landfillMcf: m.landfillMcf,
+      landfillOx: m.landfillOx,
+      landfillGasCaptureR: m.landfillGasCaptureR,
+      carbonPriceUsdPerTon: pricePerTon,
       ashOutputTon: m.ashOutputTon,
     });
+
+    const hasStackBreach =
+      evaluateStackParameter("pm", m.pm25, thresholds.pmLimitMgNm3) === "DANGER" ||
+      evaluateStackParameter("co", m.co) === "DANGER" ||
+      evaluateStackParameter("hcl", m.hcl) === "DANGER" ||
+      m.coreTemp >= thresholds.tempAlarmC;
 
     const rows = [
       ["Metric", "Value", "Unit / Standard"],
       ["Device Name", activeDevice.name, `${activeDevice.model} (SN: ${activeDevice.sn})`],
       ["Location", activeDevice.location, `IEA Grid EF: ${m.gridEmissionFactor} kg CO2/kWh`],
+      ["Regional Landfill Baseline", m.landfillBaselineLabel, "IPCC 2006 Vol. 5 Table 3.1/3.2"],
       ["Waste Diverted (Monthly)", String(m.wasteProcessedTon), "tons (GRI 306)"],
       ["Thermal Mass Reduction", String(m.massReductionPct), "% (#trash2ash4%)"],
       ["Circular Ash Output", String(m.ashOutputTon), `tons (Batch ${m.latestAshBatchId})`],
-      ["Avoided Landfill CH4", String(carbon.avoidedCh4Tons), "tCH4 (IPCC 2006 Vol. 5)"],
-      ["Baseline Avoided Emissions", String(carbon.baselineLandfillCo2e), "tCO2e (GWP100 = 28)"],
+      ["Avoided Landfill CH4 (Ex-Ante Lifetime)", String(carbon.avoidedCh4Tons), "tCH4 (10-20 yr FOD registry issuance)"],
+      ["Baseline Avoided Emissions", String(carbon.baselineLandfillCo2e), "tCO2e (IPCC AR6 GWP100 = 27.9)"],
       ["Biogenic CO2 (Memo Item)", String(carbon.biogenicCo2MemoTon), "tCO2 (GHG Protocol Neutral)"],
-      ["Scope 1 Fossil CO2", String(carbon.scope1FossilCo2e), "tCO2e (Plastic Fraction)"],
-      ["Scope 2 Electricity CO2", String(carbon.scope2ElectricityCo2e), "tCO2e (Power Meter)"],
-      ["Net Carbon Saved (Monthly)", String(carbon.netCarbonSavedCo2e), "tCO2e"],
-      ["Carbon Credit Valuation (@ $25/t)", `$${carbon.monthlyCreditValueUsd}`, "USD/month"],
-      ["Annualized Carbon Credit", `$${carbon.annualCreditValueUsd}`, "USD/year"],
-      ["US EPA OSWI Compliance Rate", `${m.epaCompliancePct}%`, "40 CFR Part 60 Subpart EEEE"],
+      ["Scope 1A Fossil Plastic CO2", String(carbon.scope1FossilPlasticCo2e), "tCO2e"],
+      ["Scope 1B Non-CO2 Thermal N2O/CH4", String(carbon.scope1NonCo2TraceCo2e), "tCO2e (IPCC Vol. 5 Ch. 5)"],
+      ["Scope 2 Electricity CO2", String(carbon.scope2ElectricityCo2e), "tCO2e (Smart Power Meter)"],
+      ["Scope 3 Avoided Waste Hauling (Memo)", String(carbon.scope3AvoidedHaulingMemoCo2e), "tCO2e (Excluded from CH4 credits)"],
+      ["Net Ex-Ante Carbon Saved (Monthly)", String(carbon.netCarbonSavedCo2e), "tCO2e"],
+      [`Carbon Credit Potential (@ $${pricePerTon}/t)`, `$${carbon.monthlyCreditValueUsd}`, "USD/month (Ex-Ante)"],
+      [`Annualized Carbon Credit (@ $${pricePerTon}/t)`, `$${carbon.annualCreditValueUsd}`, "USD/year (Ex-Ante)"],
+      ["US EPA OSWI Compliance Status", hasStackBreach ? `EXCEPTION LOGGED (${m.epaCompliancePct}%)` : `COMPLIANT (${m.epaCompliancePct}%)`, "40 CFR Part 60 Subpart EEEE"],
+      ["Method 23/29 Lab Stack Status", activeDevice.labStackTest.status, `${activeDevice.labStackTest.accreditedLab} (Next due ${activeDevice.labStackTest.nextDueDate})`],
     ];
 
     const csv = rows
@@ -63,7 +78,7 @@ export default function ExecutiveDashboard() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `asher-esg-carbon-report-${activeDevice.sn}.csv`;
+    link.download = `asher-esg-carbon-report-${activeDevice.sn}-${pricePerTon}usd.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -77,7 +92,7 @@ export default function ExecutiveDashboard() {
             Executive ESG &amp; Carbon Dashboard
           </h2>
           <p className="text-sm md:text-base text-slate-500 mt-1">
-            IPCC 2006 carbon accounting &amp; GRI/ISSB ESG reporting for{" "}
+            IPCC 2006/AR6 carbon accounting &amp; GRI/ISSB ESG reporting for{" "}
             <span className="font-medium text-foreground">{activeDevice.name}</span> (
             {activeDevice.location})
           </p>
@@ -114,7 +129,7 @@ export default function ExecutiveDashboard() {
       />
 
       <div className="space-y-6">
-        <CarbonCreditDisplay />
+        <CarbonCreditDisplay pricePerTon={pricePerTon} onPriceChange={setPricePerTon} />
 
         {showScorecard && <EsgScorecard />}
 
