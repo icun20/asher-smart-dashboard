@@ -2,26 +2,26 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 
-export type StatusType = "Aman" | "Waspada" | "Bahaya";
+export type StatusType = "Safe" | "Warning" | "Danger";
 
 interface StatusBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   status: StatusType;
 }
 
 export function StatusBadge({ status, className, ...props }: StatusBadgeProps) {
-  let icon;
+  let icon: React.ReactNode;
   let colorClass = "";
 
   switch (status) {
-    case "Aman":
+    case "Safe":
       icon = <CheckCircle2 className="w-4 h-4 mr-1.5" />;
       colorClass = "bg-safe text-safe-foreground";
       break;
-    case "Waspada":
+    case "Warning":
       icon = <AlertTriangle className="w-4 h-4 mr-1.5" />;
       colorClass = "bg-warning text-warning-foreground";
       break;
-    case "Bahaya":
+    case "Danger":
       icon = <XCircle className="w-4 h-4 mr-1.5" />;
       colorClass = "bg-danger text-danger-foreground";
       break;

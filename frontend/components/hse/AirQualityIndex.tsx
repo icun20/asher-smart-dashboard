@@ -7,30 +7,35 @@ import { useDevice } from "@/components/DeviceContext";
 export function AirQualityIndex() {
   const { activeDevice } = useDevice();
   const [mounted, setMounted] = useState(false);
-  
+
   useEffect(() => {
     setMounted(true);
   }, []);
-  
-  let aqi = 42;
+
+  const aqi = activeDevice.metrics.aqi;
   let status = "GOOD";
-  let message = "Safe for operators without masks";
+  let message = "Safe for operators without respiratory PPE";
   let color = "text-safe";
-  
-  if (activeDevice.id === "1031") {
-    aqi = 125;
+
+  if (aqi >= 150) {
+    status = "HAZARDOUS";
+    message = "Evacuate loading area and inspect exhaust seals";
+    color = "text-danger";
+  } else if (aqi >= 100) {
     status = "UNHEALTHY";
-    message = "N95 mask required";
+    message = "N95 respirator required near loading bay";
     color = "text-warning";
-  } else if (activeDevice.id === "1030") {
-    aqi = 15;
+  } else if (aqi >= 51) {
+    status = "MODERATE";
+    message = "Acceptable air quality; monitor stack filtration";
+    color = "text-warning";
+  } else if (aqi <= 25) {
     status = "EXCELLENT";
-    message = "Air quality is very clean";
+    message = "Ambient air quality is exceptionally clean";
     color = "text-safe";
   }
 
-  // Calculate pointer position (0-200+)
-  const percentage = Math.min((aqi / 200) * 100, 100);
+  const percentage = Math.min(Math.max((aqi / 200) * 100, 0), 100);
 
   return (
     <Card className="border-border shadow-none">
@@ -45,17 +50,17 @@ export function AirQualityIndex() {
           <div className="font-bold tracking-widest text-foreground uppercase mb-1">{status}</div>
           <div className="text-sm text-slate-500">{message}</div>
         </div>
-        
-        <div className="relative max-w-2xl mx-auto px-4 mt-12">
-          {/* Gradient Bar */}
-          <div className="h-4 w-full rounded-full bg-gradient-to-r from-green-400 via-yellow-400 to-red-500" />
-          
-          {/* Minimalist Pointer */}
-          <div 
-            className="absolute top-1/2 -mt-2.5 -ml-2.5 w-5 h-5 bg-white border-2 border-slate-900 dark:border-white rounded-[4px] transform rotate-45 shadow-sm transition-all duration-1000 z-10"
-            style={{ left: mounted ? `calc(${percentage}% + 1rem)` : '1rem' }}
-          />
-          
+
+        <div className="max-w-2xl mx-auto px-2 sm:px-4 mt-10">
+          {/* Bar + Accurately Positioned Pointer */}
+          <div className="relative flex items-center">
+            <div className="h-4 w-full rounded-full bg-gradient-to-r from-green-400 via-yellow-400 to-red-500" />
+            <div
+              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 bg-white border-2 border-slate-900 dark:border-slate-200 rounded-[4px] rotate-45 shadow-sm transition-all duration-1000 z-10"
+              style={{ left: mounted ? `${percentage}%` : "0%" }}
+            />
+          </div>
+
           {/* Labels */}
           <div className="flex justify-between mt-3 text-xs text-slate-400 font-medium">
             <span>0</span>

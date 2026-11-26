@@ -1,7 +1,10 @@
+"use client";
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { StatusBadge, StatusType } from "@/components/ui/StatusBadge";
 import { Activity } from "lucide-react";
+import { useDevice } from "@/components/DeviceContext";
 
 interface SensorData {
   id: string;
@@ -13,14 +16,55 @@ interface SensorData {
   status: StatusType;
 }
 
-const mockSensorData: SensorData[] = [
-  { id: "1", parameter: "PM2.5", sensorType: "Laser Scattering", value: 12, unit: "µg/m³", limit: "50", status: "Aman" },
-  { id: "2", parameter: "SO2", sensorType: "Electrochemical", value: 0.08, unit: "ppm", limit: "0.1", status: "Waspada" },
-  { id: "3", parameter: "NO2", sensorType: "Electrochemical", value: 0.05, unit: "ppm", limit: "0.2", status: "Aman" },
-  { id: "4", parameter: "CO", sensorType: "Electrochemical", value: 8.5, unit: "ppm", limit: "10", status: "Bahaya" },
-];
+function getBadgeStatus(val: number, warn: number, danger: number): StatusType {
+  if (val >= danger) return "Danger";
+  if (val >= warn) return "Warning";
+  return "Safe";
+}
 
 export function SensorDataGrid() {
+  const { activeDevice } = useDevice();
+  const { pm25, so2, no2, co } = activeDevice.metrics;
+
+  const sensorRows: SensorData[] = [
+    {
+      id: "1",
+      parameter: "PM2.5",
+      sensorType: "Laser Scattering",
+      value: pm25,
+      unit: "µg/m³",
+      limit: "50",
+      status: getBadgeStatus(pm25, 35, 50),
+    },
+    {
+      id: "2",
+      parameter: "SO₂",
+      sensorType: "Electrochemical",
+      value: so2,
+      unit: "ppm",
+      limit: "0.10",
+      status: getBadgeStatus(so2, 0.06, 0.1),
+    },
+    {
+      id: "3",
+      parameter: "NO₂",
+      sensorType: "Electrochemical",
+      value: no2,
+      unit: "ppm",
+      limit: "0.15",
+      status: getBadgeStatus(no2, 0.05, 0.15),
+    },
+    {
+      id: "4",
+      parameter: "CO",
+      sensorType: "Electrochemical",
+      value: co,
+      unit: "ppm",
+      limit: "10.0",
+      status: getBadgeStatus(co, 6, 10),
+    },
+  ];
+
   return (
     <Card className="shadow-none border border-border">
       <CardHeader className="pb-4">
@@ -36,12 +80,12 @@ export function SensorDataGrid() {
               <tr>
                 <th className="px-4 py-3 font-semibold">Parameter</th>
                 <th className="px-4 py-3 font-semibold">Value</th>
-                <th className="px-4 py-3 hidden sm:table-cell font-semibold">Ambang Batas (Limit)</th>
+                <th className="px-4 py-3 hidden sm:table-cell font-semibold">Threshold Limit</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
               </tr>
             </thead>
             <tbody>
-              {mockSensorData.map((data) => (
+              {sensorRows.map((data) => (
                 <tr key={data.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-4 font-medium text-foreground">
                     {data.parameter}

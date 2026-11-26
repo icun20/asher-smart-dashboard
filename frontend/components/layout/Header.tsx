@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { User, ChevronDown, Check, Search } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePathname } from "next/navigation";
@@ -25,9 +26,11 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredDevices = devices.filter(d => 
-    d.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    d.sn.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredDevices = devices.filter(
+    (d) =>
+      d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.sn.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.location.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -39,29 +42,34 @@ export function Header() {
   };
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background px-6 relative z-30">
-      <div className="flex items-center" ref={dropdownRef}>
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background px-3 sm:px-6 relative z-30 gap-2">
+      <div className="flex items-center min-w-0" ref={dropdownRef}>
         {pathname !== "/" ? (
-          <div className="relative">
+          <div className="relative min-w-0">
             <button
+              type="button"
               onClick={() => setIsOpen(!isOpen)}
-              className="flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 px-3 py-1.5 rounded-md transition-colors border border-transparent hover:border-border"
+              className="flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-3 py-1.5 rounded-md transition-colors border border-transparent hover:border-border max-w-[210px] sm:max-w-none"
             >
-              <div className="flex flex-col text-left">
-                <span className="font-semibold text-foreground text-sm leading-tight">{activeDevice.name}</span>
-                <span className="text-[11px] text-slate-500 leading-tight">SN: {activeDevice.sn} • {activeDevice.location}</span>
+              <div className="flex flex-col text-left min-w-0">
+                <span className="font-semibold text-foreground text-sm leading-tight truncate">
+                  {activeDevice.name}
+                </span>
+                <span className="text-[11px] text-slate-500 leading-tight truncate">
+                  SN: {activeDevice.sn} • {activeDevice.location}
+                </span>
               </div>
-              <ChevronDown className="w-4 h-4 text-slate-500 ml-1" />
+              <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
             </button>
-            
+
             {isOpen && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50">
+              <div className="absolute top-full left-0 mt-2 w-64 sm:w-72 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50">
                 <div className="p-2 border-b border-border">
                   <div className="relative">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                    <input 
-                      type="text" 
-                      placeholder="Scan/Type SN or Name..." 
+                    <input
+                      type="text"
+                      placeholder="Scan/Type SN, Name, or City..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={handleKeyDown}
@@ -71,10 +79,13 @@ export function Header() {
                   </div>
                 </div>
                 <div className="p-2 max-h-60 overflow-y-auto">
-                  <div className="text-xs font-semibold text-slate-500 uppercase px-2 py-1 mb-1">Switch Device</div>
+                  <div className="text-xs font-semibold text-slate-500 uppercase px-2 py-1 mb-1">
+                    Switch Device
+                  </div>
                   {filteredDevices.length > 0 ? (
                     filteredDevices.map((device) => (
                       <button
+                        type="button"
                         key={device.id}
                         onClick={() => {
                           setActiveDevice(device);
@@ -86,33 +97,54 @@ export function Header() {
                           activeDevice.id === device.id ? "bg-slate-50 dark:bg-slate-800/50" : ""
                         )}
                       >
-                        <div>
-                          <div className={cn("font-medium", activeDevice.id === device.id ? "text-blue-600 dark:text-blue-400" : "text-foreground")}>{device.name}</div>
-                          <div className="text-xs text-slate-500">SN: {device.sn}</div>
+                        <div className="min-w-0 pr-2">
+                          <div
+                            className={cn(
+                              "font-medium truncate",
+                              activeDevice.id === device.id
+                                ? "text-blue-600 dark:text-blue-400"
+                                : "text-foreground"
+                            )}
+                          >
+                            {device.name}
+                          </div>
+                          <div className="text-xs text-slate-500 truncate">
+                            SN: {device.sn} • {device.location}
+                          </div>
                         </div>
-                        {activeDevice.id === device.id && <Check className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
+                        {activeDevice.id === device.id && (
+                          <Check className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                        )}
                       </button>
                     ))
                   ) : (
-                    <div className="px-2 py-4 text-sm text-slate-500 text-center">No devices found.</div>
+                    <div className="px-2 py-4 text-sm text-slate-500 text-center">
+                      No devices found.
+                    </div>
                   )}
                 </div>
               </div>
             )}
           </div>
         ) : (
-          <div className="font-semibold text-foreground text-lg">Dashboard</div>
+          <div className="font-semibold text-foreground text-base sm:text-lg truncate">
+            Fleet Dashboard
+          </div>
         )}
       </div>
 
-      <div className="flex items-center gap-x-4">
+      <div className="flex items-center gap-x-2 sm:gap-x-4 shrink-0">
         <LocalTime />
         <ThemeToggle />
-        
-        <div className="flex items-center text-sm font-medium text-slate-600 hover:text-foreground cursor-pointer transition-colors">
-          <User className="h-4 w-4 mr-2" />
-          TerraSync Studio
-        </div>
+
+        <Link
+          href="/settings"
+          className="flex items-center text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+          title="Account Settings"
+        >
+          <User className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">TerraSync Studio</span>
+        </Link>
       </div>
     </header>
   );
@@ -124,14 +156,14 @@ function LocalTime() {
   useEffect(() => {
     const updateTime = () => {
       try {
-        const str = new Intl.DateTimeFormat('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
+        const str = new Intl.DateTimeFormat("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
           hour12: true,
-          timeZoneName: 'short'
+          timeZoneName: "short",
         }).format(new Date());
         setTimeStr(str);
-      } catch (e) {
+      } catch {
         setTimeStr("");
       }
     };
@@ -141,5 +173,9 @@ function LocalTime() {
   }, []);
 
   if (!timeStr) return null;
-  return <div className="text-sm font-medium text-slate-500 mr-2 border-r border-border pr-4 hidden sm:block">{timeStr} (Your Local)</div>;
+  return (
+    <div className="text-sm font-medium text-slate-500 border-r border-border pr-4 hidden md:block whitespace-nowrap">
+      {timeStr} (Local)
+    </div>
+  );
 }

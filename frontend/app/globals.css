@@ -20,6 +20,9 @@
   
   --card: #ffffff;
   --card-foreground: #171717;
+
+  --popover: #ffffff;
+  --popover-foreground: #171717;
   
   --border: #e5e5e5; /* Very subtle border */
 }
@@ -42,6 +45,9 @@
   
   --card: #171717; 
   --card-foreground: #fafafa;
+
+  --popover: #171717;
+  --popover-foreground: #fafafa;
   
   --border: #262626;
 }
@@ -64,6 +70,9 @@
   
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   
   --color-border: var(--border);
   
