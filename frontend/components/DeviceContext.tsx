@@ -13,9 +13,10 @@ export type MaintenanceTask = {
 };
 
 export type DeviceMetrics = {
-  // Executive / Carbon
+  // Executive / Carbon (Monthly figures aligned with A400EX / A300S real capacity @ $25/tCO2e)
   carbonCreditValue: string;
   carbonCreditChange: string;
+  carbonPricePerTonUsd: number;
   wasteProcessed: string;
   energyConsumed: string;
   // Numeric Analytics & HSE
@@ -23,6 +24,15 @@ export type DeviceMetrics = {
   wasteProcessedTon: number;
   energyConsumedKwh: number;
   gridEmissionFactor: number; // IEA kg CO2/kWh by deployment region
+  // Operator / Mass Balance & Circular Ash
+  operatingHoursMonth: number;
+  utilizationPct: number;
+  dailyThroughputKg: number;
+  ashOutputTon: number; // ~4% of input waste
+  massReductionPct: number;
+  ashValueUsd: number; // Est. soil conditioner / brick feedstock value ($45/ton)
+  latestAshBatchId: string;
+  // HSE Emissions & Thermal
   aqi: number;
   coreTemp: number;
   pm25: number;
@@ -62,14 +72,23 @@ export const MOCK_DEVICES: Device[] = [
     timezoneLabel: "MYT",
     status: "active",
     metrics: {
-      carbonCreditValue: "$4,850",
+      // Net CO2e = 180*1.2 - (10800*0.585/1000 + 180*0.05) = 216 - 15.32 = 200.68 tCO2e -> @ $25 = $5,017
+      carbonCreditValue: "$5,017",
       carbonCreditChange: "+12%",
-      wasteProcessed: "2,450",
-      energyConsumed: "12,400",
-      estimatedValue: 4850,
-      wasteProcessedTon: 2450,
-      energyConsumedKwh: 12400,
+      carbonPricePerTonUsd: 25,
+      wasteProcessed: "180",
+      energyConsumed: "10,800",
+      estimatedValue: 5017,
+      wasteProcessedTon: 180,
+      energyConsumedKwh: 10800,
       gridEmissionFactor: 0.585,
+      operatingHoursMonth: 468,
+      utilizationPct: 86,
+      dailyThroughputKg: 6040,
+      ashOutputTon: 7.2,
+      massReductionPct: 96.0,
+      ashValueUsd: 324,
+      latestAshBatchId: "ASH-1029-084",
       aqi: 42,
       coreTemp: 850,
       pm25: 12.4,
@@ -98,7 +117,7 @@ export const MOCK_DEVICES: Device[] = [
         action: "Refill Nanogreen Filtration Solution",
         countdown: "26d",
         countdownDays: 26,
-        reason: "Usage-based consumption trend over 320 operating hours",
+        reason: "Usage-based consumption trend over 468 operating hours",
         accuracy: 94,
         urgency: "low",
       },
@@ -114,14 +133,23 @@ export const MOCK_DEVICES: Device[] = [
     timezoneLabel: "EST",
     status: "maintenance",
     metrics: {
-      carbonCreditValue: "$1,200",
+      // Net CO2e = 52*1.2 - (3120*0.386/1000 + 52*0.05) = 62.4 - 3.80 = 58.60 tCO2e -> @ $25 = $1,465
+      carbonCreditValue: "$1,465",
       carbonCreditChange: "-5%",
-      wasteProcessed: "850",
-      energyConsumed: "4,200",
-      estimatedValue: 1200,
-      wasteProcessedTon: 850,
-      energyConsumedKwh: 4200,
+      carbonPricePerTonUsd: 25,
+      wasteProcessed: "52",
+      energyConsumed: "3,120",
+      estimatedValue: 1465,
+      wasteProcessedTon: 52,
+      energyConsumedKwh: 3120,
       gridEmissionFactor: 0.386,
+      operatingHoursMonth: 174,
+      utilizationPct: 32,
+      dailyThroughputKg: 0,
+      ashOutputTon: 2.1,
+      massReductionPct: 96.0,
+      ashValueUsd: 95,
+      latestAshBatchId: "ASH-1030-031",
       aqi: 18,
       coreTemp: 25,
       pm25: 2.1,
@@ -166,14 +194,23 @@ export const MOCK_DEVICES: Device[] = [
     timezoneLabel: "CET",
     status: "warning",
     metrics: {
-      carbonCreditValue: "$3,650",
+      // Net CO2e = 145*1.2 - (9200*0.056/1000 + 145*0.05) = 174 - 7.77 = 166.23 tCO2e -> @ $25 = $4,156
+      carbonCreditValue: "$4,156",
       carbonCreditChange: "+8%",
-      wasteProcessed: "1,920",
-      energyConsumed: "9,800",
-      estimatedValue: 3650,
-      wasteProcessedTon: 1920,
-      energyConsumedKwh: 9800,
+      carbonPricePerTonUsd: 25,
+      wasteProcessed: "145",
+      energyConsumed: "9,200",
+      estimatedValue: 4156,
+      wasteProcessedTon: 145,
+      energyConsumedKwh: 9200,
       gridEmissionFactor: 0.056,
+      operatingHoursMonth: 392,
+      utilizationPct: 74,
+      dailyThroughputKg: 4820,
+      ashOutputTon: 6.4,
+      massReductionPct: 95.6,
+      ashValueUsd: 288,
+      latestAshBatchId: "ASH-1031-067",
       aqi: 118,
       coreTemp: 940,
       pm25: 55.4,

@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { ShieldAlert, ShieldCheck, ScanEye, Leaf, Flame, Box, Info } from "lucide-react";
 import { useDevice } from "@/components/DeviceContext";
-import { VisionCameraFeed } from "@/components/vision/VisionCameraFeed";
+import { VisionCameraFeed, type DetectionSource } from "@/components/vision/VisionCameraFeed";
 import { WasteCategoryBreakdown } from "@/components/vision/WasteCategoryBreakdown";
 import { VisionDetectionLog } from "@/components/vision/VisionDetectionLog";
 import {
@@ -19,10 +19,8 @@ export default function WasteVisionDashboard() {
   const [detections, setDetections] = useState<WasteDetectionBox[]>(
     SIMULATION_SCENARIOS[0].detections
   );
-  const [activeSource, setActiveSource] = useState<
-    "Trolley Cam" | "Photo Upload" | "Live Webcam"
-  >("Trolley Cam");
-  const [confidenceThreshold, setConfidenceThreshold] = useState<number>(0.7);
+  const [activeSource, setActiveSource] = useState<DetectionSource>("Trolley Cam");
+  const [confidenceThreshold, setConfidenceThreshold] = useState<number>(0.55);
   const [logs, setLogs] = useState<VisionBatchLogEntry[]>(() =>
     createInitialBatchLogs(activeDevice.sn)
   );
@@ -34,7 +32,7 @@ export default function WasteVisionDashboard() {
   }, [activeDevice.sn]);
 
   const handleDetectionsUpdate = useCallback(
-    (boxes: WasteDetectionBox[], source: "Trolley Cam" | "Photo Upload" | "Live Webcam") => {
+    (boxes: WasteDetectionBox[], source: DetectionSource) => {
       setDetections(boxes);
       setActiveSource(source);
     },
@@ -79,15 +77,15 @@ export default function WasteVisionDashboard() {
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <h2 className="text-2xl md:text-3xl font-semibold tracking-tight font-heading">
-              AI Waste Vision Dashboard
+              AI Waste Vision
             </h2>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/15 text-foreground border border-primary/30">
               <ScanEye className="w-3.5 h-3.5 mr-1 text-primary" />
-              YOLOv8 Pre-Feed Sampling
+              Hybrid Neural Net + Deep Audit
             </span>
           </div>
           <p className="text-sm md:text-base text-slate-500 mt-1">
-            Real-time computer vision waste classification &amp; B3 screening for{" "}
+            Dedicated computer vision station for incoming waste classification &amp; B3 screening —{" "}
             <span className="font-medium text-foreground">{activeDevice.name}</span> (SN:{" "}
             {activeDevice.sn})
           </p>
@@ -96,7 +94,7 @@ export default function WasteVisionDashboard() {
         <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-xs text-slate-500">
           <Info className="w-4 h-4 text-primary shrink-0" />
           <span>
-            Methodology: Top-layer trolley statistical sampling prior to 56×76 cm manual feed.
+            Scale-triggered top-layer trolley sampling prior to 56×76 cm manual feed.
           </span>
         </div>
       </div>

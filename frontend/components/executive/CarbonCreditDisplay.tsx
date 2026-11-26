@@ -11,12 +11,20 @@ export function CarbonCreditDisplay() {
   const [showDetails, setShowDetails] = useState(false);
 
   const isPositive = activeDevice.metrics.carbonCreditChange.startsWith("+");
-  const { wasteProcessedTon, energyConsumedKwh, gridEmissionFactor } = activeDevice.metrics;
+  const {
+    wasteProcessedTon,
+    energyConsumedKwh,
+    gridEmissionFactor,
+    carbonPricePerTonUsd,
+    ashValueUsd,
+    ashOutputTon,
+  } = activeDevice.metrics;
 
   const baselineAvoided = wasteProcessedTon * 1.2;
   const scope2Emissions = (energyConsumedKwh * gridEmissionFactor) / 1000;
   const scope1Direct = wasteProcessedTon * 0.05;
   const netCarbonSaved = Math.max(0, baselineAvoided - (scope2Emissions + scope1Direct));
+  const totalCircularValue = Math.round(netCarbonSaved * carbonPricePerTonUsd) + ashValueUsd;
 
   return (
     <Card className="flex flex-col overflow-hidden border border-border">
@@ -24,14 +32,15 @@ export function CarbonCreditDisplay() {
         <div className="flex-1 p-5 md:p-8 flex flex-col justify-center">
           <div className="inline-flex items-center text-sm font-semibold text-primary mb-2">
             <Leaf className="h-4 w-4 mr-1.5" />
-            Carbon Credit Generation
+            Carbon Credit Generation (@ ${carbonPricePerTonUsd}/tCO₂e)
           </div>
           <h3 className="text-xl md:text-2xl font-semibold mb-2 font-heading tracking-tight">
-            Estimated Value
+            Estimated Monthly Value
           </h3>
           <p className="text-slate-500 text-sm max-w-md mb-6 leading-relaxed">
-            Track the estimated financial value generated from avoiding landfill methane (CH₄)
-            emissions minus verified Scope 1 &amp; Scope 2 ASHER operations.
+            Verified value generated from avoiding landfill methane (CH₄) emissions minus regional
+            Scope 1 &amp; Scope 2 ASHER operations, plus ${ashValueUsd.toLocaleString("en-US")}{" "}
+            estimated circular ash off-take ({ashOutputTon.toFixed(1)} tons).
           </p>
 
           <div className="flex items-center gap-4">
@@ -40,7 +49,7 @@ export function CarbonCreditDisplay() {
               onClick={() => setShowDetails((prev) => !prev)}
               className="inline-flex items-center justify-center rounded-md border border-border bg-card px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
             >
-              {showDetails ? "Hide Details" : "View Details"}
+              {showDetails ? "Hide Breakdown" : "View Breakdown"}
               {showDetails ? (
                 <ChevronUp className="ml-2 h-4 w-4 text-slate-500" />
               ) : (
@@ -67,7 +76,10 @@ export function CarbonCreditDisplay() {
               )}
               {activeDevice.metrics.carbonCreditChange}
             </span>
-            from last period
+            from last month
+          </div>
+          <div className="text-xs text-slate-400 mt-1.5">
+            Total w/ Circular Ash: ${totalCircularValue.toLocaleString("en-US")}
           </div>
         </div>
       </div>
@@ -77,7 +89,8 @@ export function CarbonCreditDisplay() {
           <div>
             <div className="text-xs text-slate-500 uppercase font-medium">Landfill CH₄ Baseline</div>
             <div className="text-lg font-bold text-safe mt-0.5">
-              {baselineAvoided.toFixed(1)} <span className="text-xs font-normal text-slate-400">tCO₂e</span>
+              {baselineAvoided.toFixed(1)}{" "}
+              <span className="text-xs font-normal text-slate-400">tCO₂e</span>
             </div>
           </div>
           <div>
@@ -85,19 +98,22 @@ export function CarbonCreditDisplay() {
               Scope 2 (EF: {gridEmissionFactor})
             </div>
             <div className="text-lg font-bold text-warning mt-0.5">
-              -{scope2Emissions.toFixed(1)} <span className="text-xs font-normal text-slate-400">tCO₂e</span>
+              -{scope2Emissions.toFixed(2)}{" "}
+              <span className="text-xs font-normal text-slate-400">tCO₂e</span>
             </div>
           </div>
           <div>
             <div className="text-xs text-slate-500 uppercase font-medium">Scope 1 Direct</div>
             <div className="text-lg font-bold text-danger mt-0.5">
-              -{scope1Direct.toFixed(1)} <span className="text-xs font-normal text-slate-400">tCO₂e</span>
+              -{scope1Direct.toFixed(1)}{" "}
+              <span className="text-xs font-normal text-slate-400">tCO₂e</span>
             </div>
           </div>
           <div>
             <div className="text-xs text-slate-500 uppercase font-medium">Net Carbon Saved</div>
             <div className="text-lg font-bold text-foreground mt-0.5">
-              {netCarbonSaved.toFixed(1)} <span className="text-xs font-normal text-slate-400">tCO₂e</span>
+              {netCarbonSaved.toFixed(1)}{" "}
+              <span className="text-xs font-normal text-slate-400">tCO₂e</span>
             </div>
           </div>
         </div>

@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { WasteVisionFeed } from "@/components/operator/WasteVisionFeed";
+import { OperatorKpiGrid } from "@/components/operator/OperatorKpiGrid";
+import { MassBalanceCard } from "@/components/operator/MassBalanceCard";
 import { PredictiveMaintenanceList } from "@/components/operator/PredictiveMaintenanceList";
 import { DashboardFilterBar } from "@/components/ui/DashboardFilterBar";
 import { ScanEye, ArrowRight } from "lucide-react";
@@ -10,9 +11,15 @@ import { useDevice } from "@/components/DeviceContext";
 
 export default function OperatorDashboard() {
   const { activeDevice } = useDevice();
+  const [selectedView, setSelectedView] = useState("All Operations");
+
+  const showMassBalance =
+    selectedView === "All Operations" || selectedView === "Mass Balance & Ash";
+  const showMaintenance =
+    selectedView === "All Operations" || selectedView === "Consumables & Service";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-8">
       {/* Title & Vision Studio CTA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -20,8 +27,9 @@ export default function OperatorDashboard() {
             Operator Dashboard
           </h2>
           <p className="text-sm md:text-base text-slate-500 mt-1">
-            Viewing operations &amp; consumables for{" "}
-            <span className="font-medium text-foreground">{activeDevice.name}</span> ({activeDevice.model})
+            Machine utilization, mass balance &amp; consumables for{" "}
+            <span className="font-medium text-foreground">{activeDevice.name}</span> (
+            {activeDevice.model})
           </p>
         </div>
         <Link
@@ -36,16 +44,25 @@ export default function OperatorDashboard() {
 
       <DashboardFilterBar
         filterLabel="View"
-        filterOptions={["All Operations", "Vision Feed Only", "Consumables & Service"]}
+        filterOptions={["All Operations", "Mass Balance & Ash", "Consumables & Service"]}
+        onFilterChange={setSelectedView}
       />
 
+      {/* Live Operational Telemetry KPIs */}
+      <OperatorKpiGrid />
+
+      {/* Mass Balance (Ash Circularity) & Usage-Based Predictive Maintenance */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="lg:col-span-1">
-          <WasteVisionFeed />
-        </div>
-        <div className="lg:col-span-1">
-          <PredictiveMaintenanceList />
-        </div>
+        {showMassBalance && (
+          <div className={showMaintenance ? "lg:col-span-1" : "lg:col-span-2"}>
+            <MassBalanceCard />
+          </div>
+        )}
+        {showMaintenance && (
+          <div className={showMassBalance ? "lg:col-span-1" : "lg:col-span-2"}>
+            <PredictiveMaintenanceList />
+          </div>
+        )}
       </div>
     </div>
   );

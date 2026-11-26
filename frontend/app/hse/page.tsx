@@ -1,19 +1,26 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useDevice } from "@/components/DeviceContext";
 import { DashboardFilterBar } from "@/components/ui/DashboardFilterBar";
 import { EmissionMonitoring } from "@/components/hse/EmissionMonitoring";
 import { TemperatureGauge } from "@/components/hse/TemperatureGauge";
 import { AirQualityIndex } from "@/components/hse/AirQualityIndex";
 import { EmissionHistoryChart } from "@/components/hse/EmissionHistoryChart";
+import { SensorDataGrid } from "@/components/hse/SensorDataGrid";
 import { IncidentLog } from "@/components/hse/IncidentLog";
 
 export default function HSEDashboard() {
   const { activeDevice } = useDevice();
+  const [selectedFilter, setSelectedFilter] = useState("All Emissions");
+
+  const showEmissions =
+    selectedFilter === "All Emissions" || selectedFilter === "Emissions & Sensors";
+  const showAmbientAndLogs =
+    selectedFilter === "All Emissions" || selectedFilter === "Air Quality & Incidents";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-8">
       {/* Title & Filter Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -28,24 +35,33 @@ export default function HSEDashboard() {
       </div>
 
       <DashboardFilterBar
-        filterLabel="Parameter"
-        filterOptions={["All Emissions", "Particulate (PM2.5)", "Gases (NO₂, SO₂, CO)"]}
+        filterLabel="Section"
+        filterOptions={["All Emissions", "Emissions & Sensors", "Air Quality & Incidents"]}
+        onFilterChange={setSelectedFilter}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <EmissionMonitoring />
-        </div>
-        <div className="lg:col-span-1">
-          <TemperatureGauge />
-        </div>
-      </div>
+      {showEmissions && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <EmissionMonitoring />
+            </div>
+            <div className="lg:col-span-1">
+              <TemperatureGauge />
+            </div>
+          </div>
 
-      <AirQualityIndex />
+          <SensorDataGrid />
+          <EmissionHistoryChart />
+        </>
+      )}
 
-      <EmissionHistoryChart />
-
-      <IncidentLog />
+      {showAmbientAndLogs && (
+        <>
+          <AirQualityIndex />
+          <IncidentLog />
+        </>
+      )}
     </div>
   );
 }

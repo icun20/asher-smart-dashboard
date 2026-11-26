@@ -1,3 +1,5 @@
+import type { ObjectDetection, DetectedObject } from "@tensorflow-models/coco-ssd";
+
 export type WasteCategoryId =
   | "organic"
   | "plastic"
@@ -36,7 +38,7 @@ export interface VisionBatchLogEntry {
   id: string;
   timestamp: string;
   deviceSn: string;
-  source: "Trolley Cam" | "Photo Upload" | "Live Webcam";
+  source: "Trolley Cam" | "Photo Upload" | "Live Webcam" | "Deep AI Audit";
   totalItems: number;
   totalWeightKg: number;
   biogenicPct: number;
@@ -143,6 +145,162 @@ export const WASTE_CATEGORY_LIST: WasteCategoryMeta[] = [
   WASTE_CATEGORIES.glass,
   WASTE_CATEGORIES.hazardous,
 ];
+
+/**
+ * COCO-SSD neural network classes mapped to ASHER incoming waste streams.
+ * Background objects (person, chair, couch, tv, table, etc.) are intentionally excluded
+ * so live webcam demos do not misclassify operators or room furniture as waste.
+ */
+const COCO_TO_WASTE_MAP: Record<
+  string,
+  { category: WasteCategoryId; label: string; weightKg: number }
+> = {
+  // Organic / Biogenic
+  banana: { category: "organic", label: "Banana / Fruit Waste", weightKg: 0.3 },
+  apple: { category: "organic", label: "Apple / Organic", weightKg: 0.25 },
+  orange: { category: "organic", label: "Citrus / Organic", weightKg: 0.25 },
+  broccoli: { category: "organic", label: "Vegetable Waste", weightKg: 0.4 },
+  carrot: { category: "organic", label: "Vegetable Waste", weightKg: 0.25 },
+  sandwich: { category: "organic", label: "Food Scraps", weightKg: 0.35 },
+  "hot dog": { category: "organic", label: "Food Scraps", weightKg: 0.3 },
+  pizza: { category: "organic", label: "Food Waste", weightKg: 0.45 },
+  donut: { category: "organic", label: "Bakery Waste", weightKg: 0.2 },
+  cake: { category: "organic", label: "Food Waste", weightKg: 0.5 },
+
+  // Plastic / Polymer
+  bottle: { category: "plastic", label: "PET Bottle", weightKg: 0.35 },
+  cup: { category: "plastic", label: "Cup / Polymer", weightKg: 0.15 },
+  toothbrush: { category: "plastic", label: "Plastic Item", weightKg: 0.1 },
+  backpack: { category: "plastic", label: "Synthetic Bag", weightKg: 0.9 },
+  handbag: { category: "plastic", label: "Synthetic Packaging", weightKg: 0.7 },
+  suitcase: { category: "plastic", label: "Hard Polymer Case", weightKg: 2.2 },
+  umbrella: { category: "plastic", label: "Nylon / Polymer", weightKg: 0.5 },
+  frisbee: { category: "plastic", label: "Hard Plastic", weightKg: 0.2 },
+  "sports ball": { category: "plastic", label: "Rubber / Polymer", weightKg: 0.45 },
+  "teddy bear": { category: "plastic", label: "Synthetic Textile", weightKg: 0.4 },
+
+  // Paper & Cardboard
+  book: { category: "paper", label: "Paper / Cardboard", weightKg: 0.6 },
+  kite: { category: "paper", label: "Paper / Fiber", weightKg: 0.2 },
+
+  // Metal (Non-Combustible)
+  fork: { category: "metal", label: "Metal Utensil", weightKg: 0.15 },
+  knife: { category: "metal", label: "Metal Blade", weightKg: 0.2 },
+  spoon: { category: "metal", label: "Metal Utensil", weightKg: 0.15 },
+  scissors: { category: "metal", label: "Scrap Metal", weightKg: 0.25 },
+  toaster: { category: "metal", label: "Metal Appliance", weightKg: 1.8 },
+
+  // Glass & Inert
+  "wine glass": { category: "glass", label: "Glassware", weightKg: 0.4 },
+  bowl: { category: "glass", label: "Ceramic / Glass Bowl", weightKg: 0.55 },
+  vase: { category: "glass", label: "Glass / Ceramic Vase", weightKg: 0.8 },
+  clock: { category: "glass", label: "Glass / Inert", weightKg: 0.6 },
+
+  // Hazardous / B3 (E-Waste, Lithium Batteries, Electronics)
+  "cell phone": { category: "hazardous", label: "E-Waste (Li-Ion Battery)", weightKg: 0.25 },
+  laptop: { category: "hazardous", label: "E-Waste (Battery / PCB)", weightKg: 1.6 },
+  remote: { category: "hazardous", label: "E-Waste (Dry Cell Battery)", weightKg: 0.2 },
+  keyboard: { category: "hazardous", label: "E-Waste (Electronics)", weightKg: 0.75 },
+  mouse: { category: "hazardous", label: "E-Waste (Electronics)", weightKg: 0.15 },
+  microwave: { category: "hazardous", label: "Hazardous Appliance", weightKg: 4.5 },
+  "hair drier": { category: "hazardous", label: "E-Waste Appliance", weightKg: 0.6 },
+};
+
+const IGNORED_BACKGROUND_CLASSES = new Set<string>([
+  "person",
+  "chair",
+  "couch",
+  "bed",
+  "dining table",
+  "bench",
+  "tv",
+  "potted plant",
+  "sink",
+  "refrigerator",
+  "oven",
+  "toilet",
+  "car",
+  "truck",
+  "bus",
+  "motorcycle",
+  "cat",
+  "dog",
+]);
+
+let cachedModelPromise: Promise<ObjectDetection> | null = null;
+
+/**
+ * Loads TensorFlow.js + COCO-SSD (mobilenet_v2 for higher detection accuracy)
+ * strictly on the client side and caches the singleton model across re-renders.
+ */
+export async function loadWasteVisionModel(): Promise<ObjectDetection> {
+  if (!cachedModelPromise) {
+    cachedModelPromise = (async () => {
+      const tf = await import("@tensorflow/tfjs");
+      await tf.ready();
+      try {
+        await tf.setBackend("webgl");
+      } catch {
+        await tf.setBackend("cpu");
+      }
+      const cocoSsd = await import("@tensorflow-models/coco-ssd");
+      return cocoSsd.load({ base: "mobilenet_v2" });
+    })().catch((err) => {
+      cachedModelPromise = null;
+      throw err;
+    });
+  }
+  return cachedModelPromise;
+}
+
+export function mapCocoPredictionsToWaste(
+  predictions: DetectedObject[],
+  sourceWidth: number,
+  sourceHeight: number,
+  wasteFilterOnly = true
+): WasteDetectionBox[] {
+  if (sourceWidth <= 0 || sourceHeight <= 0) return [];
+
+  const boxes: WasteDetectionBox[] = [];
+
+  predictions.forEach((pred, idx) => {
+    const rawClass = pred.class.toLowerCase();
+    if (wasteFilterOnly && IGNORED_BACKGROUND_CLASSES.has(rawClass)) {
+      return;
+    }
+
+    const mapped = COCO_TO_WASTE_MAP[rawClass];
+    if (wasteFilterOnly && !mapped) {
+      return;
+    }
+
+    const [px, py, pw, ph] = pred.bbox;
+    const x = Math.max(0, Math.min(1, px / sourceWidth));
+    const y = Math.max(0, Math.min(1, py / sourceHeight));
+    const w = Math.max(0.02, Math.min(1 - x, pw / sourceWidth));
+    const h = Math.max(0.02, Math.min(1 - y, ph / sourceHeight));
+
+    const category: WasteCategoryId = mapped ? mapped.category : "plastic";
+    const subLabel = mapped
+      ? mapped.label
+      : `${pred.class.charAt(0).toUpperCase()}${pred.class.slice(1)}`;
+    const estimatedWeightKg = mapped ? mapped.weightKg : 0.5;
+
+    boxes.push({
+      id: `tf-${rawClass}-${idx}`,
+      category,
+      subLabel,
+      confidence: Number(pred.score.toFixed(2)),
+      x: Number(x.toFixed(3)),
+      y: Number(y.toFixed(3)),
+      w: Number(w.toFixed(3)),
+      h: Number(h.toFixed(3)),
+      estimatedWeightKg,
+    });
+  });
+
+  return boxes;
+}
 
 export const SIMULATION_SCENARIOS: SimulationScenario[] = [
   {
@@ -253,9 +411,8 @@ export function summarizeDetections(detections: WasteDetectionBox[]) {
     }
   }
 
-  // ASHER thermal reduction: ~4% ash for combustibles + 95% residue for metal/glass
-  const estimatedAshKg =
-    (biogenicWeight + fossilWeight) * 0.04 + inertWeight * 0.92;
+  // ASHER thermal reduction: ~4% ash for combustibles + 92% residue for non-combustible metal/glass
+  const estimatedAshKg = (biogenicWeight + fossilWeight) * 0.04 + inertWeight * 0.92;
 
   return {
     totalItems: detections.length,
@@ -270,189 +427,6 @@ export function summarizeDetections(detections: WasteDetectionBox[]) {
     dominantCategory,
     hasHazardous: counts.hazardous > 0,
   };
-}
-
-/**
- * Lightweight client-side Computer Vision region analyzer for uploaded photos & live webcam frames.
- * Uses HSV chromaticity, saturation, luminance, and local edge contrast across spatial tiles
- * to classify waste material regions without requiring external ML downloads.
- */
-export function analyzeCanvasFrame(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number
-): WasteDetectionBox[] {
-  if (width <= 0 || height <= 0) return [];
-
-  const cols = 4;
-  const rows = 3;
-  const cellW = Math.floor(width / cols);
-  const cellH = Math.floor(height / rows);
-  const imageData = ctx.getImageData(0, 0, width, height).data;
-
-  interface CellResult {
-    col: number;
-    row: number;
-    category: WasteCategoryId;
-    subLabel: string;
-    confidence: number;
-    energy: number;
-  }
-
-  const cells: CellResult[] = [];
-
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const startX = c * cellW;
-      const startY = r * cellH;
-      let sumR = 0;
-      let sumG = 0;
-      let sumB = 0;
-      let sumSat = 0;
-      let sumVal = 0;
-      let edgeEnergy = 0;
-      let redHotPixels = 0;
-      let greenOrganicPixels = 0;
-      let bluePlasticPixels = 0;
-      let warmPaperPixels = 0;
-      let brightGlassPixels = 0;
-      let samples = 0;
-
-      const step = Math.max(2, Math.floor(Math.min(cellW, cellH) / 18));
-
-      for (let y = startY; y < startY + cellH - step; y += step) {
-        for (let x = startX; x < startX + cellW - step; x += step) {
-          const idx = (y * width + x) * 4;
-          const pr = imageData[idx];
-          const pg = imageData[idx + 1];
-          const pb = imageData[idx + 2];
-
-          const idxRight = (y * width + (x + step)) * 4;
-          const lum = 0.299 * pr + 0.587 * pg + 0.114 * pb;
-          const lumRight =
-            0.299 * imageData[idxRight] +
-            0.587 * imageData[idxRight + 1] +
-            0.114 * imageData[idxRight + 2];
-          edgeEnergy += Math.abs(lum - lumRight);
-
-          const maxC = Math.max(pr, pg, pb);
-          const minC = Math.min(pr, pg, pb);
-          const delta = maxC - minC;
-          const sat = maxC === 0 ? 0 : delta / maxC;
-          const val = maxC / 255;
-
-          let hue = 0;
-          if (delta > 0) {
-            if (maxC === pr) hue = 60 * (((pg - pb) / delta) % 6);
-            else if (maxC === pg) hue = 60 * ((pb - pr) / delta + 2);
-            else hue = 60 * ((pr - pg) / delta + 4);
-            if (hue < 0) hue += 360;
-          }
-
-          sumR += pr;
-          sumG += pg;
-          sumB += pb;
-          sumSat += sat;
-          sumVal += val;
-
-          // Feature votes
-          if ((hue < 14 || hue > 345) && sat > 0.55 && val > 0.4) redHotPixels++;
-          if (hue >= 55 && hue <= 165 && sat > 0.22 && val > 0.18) greenOrganicPixels++;
-          if (hue >= 175 && hue <= 265 && sat > 0.25) bluePlasticPixels++;
-          if (hue >= 20 && hue <= 52 && sat >= 0.18 && sat <= 0.65 && val > 0.35) warmPaperPixels++;
-          if (sat < 0.16 && val > 0.72) brightGlassPixels++;
-
-          samples++;
-        }
-      }
-
-      if (samples === 0) continue;
-
-      const avgSat = sumSat / samples;
-      const avgVal = sumVal / samples;
-      const avgEdge = edgeEnergy / samples;
-      const avgR = sumR / samples;
-      const avgG = sumG / samples;
-      const avgB = sumB / samples;
-
-      // Skip near-empty uniform background tiles
-      if (avgEdge < 4.5 && avgVal < 0.15) continue;
-
-      const redRatio = redHotPixels / samples;
-      const greenRatio = greenOrganicPixels / samples;
-      const blueRatio = bluePlasticPixels / samples;
-      const paperRatio = warmPaperPixels / samples;
-      const glassRatio = brightGlassPixels / samples;
-
-      let category: WasteCategoryId = "organic";
-      let subLabel = "Organic Matter";
-      let confidence = 0.72;
-
-      if (redRatio > 0.28) {
-        category = "hazardous";
-        subLabel = "Hazard / Chemical Pack";
-        confidence = Math.min(0.95, 0.76 + redRatio * 0.4);
-      } else if (blueRatio > 0.18 || (avgSat > 0.38 && avgB > avgR && avgVal > 0.35)) {
-        category = "plastic";
-        subLabel = "Polymer / PET Item";
-        confidence = Math.min(0.94, 0.74 + Math.max(blueRatio, avgSat * 0.4) * 0.45);
-      } else if (greenRatio > 0.18 || (avgG > avgB + 12 && avgSat > 0.24)) {
-        category = "organic";
-        subLabel = "Biogenic / Food Waste";
-        confidence = Math.min(0.95, 0.75 + greenRatio * 0.45);
-      } else if (paperRatio > 0.22) {
-        category = "paper";
-        subLabel = "Cardboard / Paper";
-        confidence = Math.min(0.92, 0.73 + paperRatio * 0.45);
-      } else if (glassRatio > 0.32 && avgEdge > 10) {
-        category = "glass";
-        subLabel = "Glass / Translucent";
-        confidence = Math.min(0.89, 0.68 + glassRatio * 0.35);
-      } else if (avgSat < 0.18 && avgEdge > 12) {
-        category = "metal";
-        subLabel = "Metallic / Can";
-        confidence = Math.min(0.9, 0.7 + Math.min(avgEdge / 80, 0.2));
-      } else {
-        category = avgVal > 0.55 ? "plastic" : "organic";
-        subLabel = category === "plastic" ? "Mixed Packaging" : "Mixed Organic";
-        confidence = Math.min(0.84, 0.65 + Math.min(avgEdge / 100, 0.18));
-      }
-
-      cells.push({
-        col: c,
-        row: r,
-        category,
-        subLabel,
-        confidence: Number(confidence.toFixed(2)),
-        energy: avgEdge,
-      });
-    }
-  }
-
-  // Keep top 6 highest-energy distinct cells to produce clean readable bounding boxes
-  const ranked = [...cells]
-    .sort((a, b) => b.energy * b.confidence - a.energy * a.confidence)
-    .slice(0, 6);
-
-  return ranked.map((cell, idx) => {
-    const padX = 0.025;
-    const padY = 0.03;
-    const w = 1 / cols - padX * 1.4;
-    const h = 1 / rows - padY * 1.4;
-    const meta = WASTE_CATEGORIES[cell.category];
-    const weightFactor = 0.8 + ((cell.col + cell.row + 1) % 3) * 0.35;
-    return {
-      id: `cv-${cell.row}-${cell.col}-${idx}`,
-      category: cell.category,
-      subLabel: cell.subLabel,
-      confidence: cell.confidence,
-      x: Number(Math.max(0.02, cell.col / cols + padX * 0.6).toFixed(3)),
-      y: Number(Math.max(0.03, cell.row / rows + padY * 0.6).toFixed(3)),
-      w: Number(w.toFixed(3)),
-      h: Number(h.toFixed(3)),
-      estimatedWeightKg: Number((meta.avgItemWeightKg * weightFactor).toFixed(1)),
-    };
-  });
 }
 
 export function createInitialBatchLogs(deviceSn: string): VisionBatchLogEntry[] {
