@@ -14,36 +14,36 @@ import {
 } from "recharts";
 import { useDevice } from "@/components/DeviceContext";
 
-const HISTORY_BY_DEVICE: Record<string, { time: string; pm25: number; co: number }[]> = {
+const HISTORY_BY_DEVICE: Record<string, { time: string; pm: number; co: number }[]> = {
   "1029": [
-    { time: "08:00", pm25: 11.2, co: 1.8 },
-    { time: "09:00", pm25: 14.5, co: 2.3 },
-    { time: "10:00", pm25: 16.0, co: 2.6 },
-    { time: "11:00", pm25: 13.8, co: 2.2 },
-    { time: "12:00", pm25: 10.9, co: 1.9 },
-    { time: "13:00", pm25: 12.1, co: 2.0 },
-    { time: "14:00", pm25: 15.4, co: 2.5 },
-    { time: "15:00", pm25: 12.4, co: 2.1 },
+    { time: "08:00", pm: 9.8, co: 12.1 },
+    { time: "09:00", pm: 12.2, co: 15.4 },
+    { time: "10:00", pm: 13.5, co: 17.0 },
+    { time: "11:00", pm: 11.9, co: 15.2 },
+    { time: "12:00", pm: 10.4, co: 13.8 },
+    { time: "13:00", pm: 11.0, co: 14.2 },
+    { time: "14:00", pm: 12.8, co: 16.5 },
+    { time: "15:00", pm: 11.4, co: 14.8 },
   ],
   "1030": [
-    { time: "08:00", pm25: 3.0, co: 0.4 },
-    { time: "09:00", pm25: 2.5, co: 0.2 },
-    { time: "10:00", pm25: 2.1, co: 0.1 },
-    { time: "11:00", pm25: 2.0, co: 0.1 },
-    { time: "12:00", pm25: 2.2, co: 0.1 },
-    { time: "13:00", pm25: 2.1, co: 0.1 },
-    { time: "14:00", pm25: 2.0, co: 0.1 },
-    { time: "15:00", pm25: 2.1, co: 0.1 },
+    { time: "08:00", pm: 3.1, co: 2.0 },
+    { time: "09:00", pm: 2.4, co: 1.5 },
+    { time: "10:00", pm: 1.9, co: 1.0 },
+    { time: "11:00", pm: 1.8, co: 0.9 },
+    { time: "12:00", pm: 1.8, co: 0.9 },
+    { time: "13:00", pm: 1.8, co: 0.9 },
+    { time: "14:00", pm: 1.8, co: 0.9 },
+    { time: "15:00", pm: 1.8, co: 0.9 },
   ],
   "1031": [
-    { time: "08:00", pm25: 28.0, co: 5.4 },
-    { time: "09:00", pm25: 35.5, co: 6.8 },
-    { time: "10:00", pm25: 44.2, co: 8.5 },
-    { time: "11:00", pm25: 49.0, co: 9.7 },
-    { time: "12:00", pm25: 52.3, co: 10.4 },
-    { time: "13:00", pm25: 51.8, co: 10.1 },
-    { time: "14:00", pm25: 56.1, co: 11.6 },
-    { time: "15:00", pm25: 55.4, co: 11.2 },
+    { time: "08:00", pm: 21.5, co: 26.4 },
+    { time: "09:00", pm: 25.0, co: 31.2 },
+    { time: "10:00", pm: 29.4, co: 36.8 },
+    { time: "11:00", pm: 31.8, co: 39.5 },
+    { time: "12:00", pm: 34.2, co: 41.9 },
+    { time: "13:00", pm: 35.1, co: 43.0 },
+    { time: "14:00", pm: 37.2, co: 45.4 },
+    { time: "15:00", pm: 36.4, co: 44.2 },
   ],
 };
 
@@ -54,11 +54,16 @@ export function EmissionHistoryChart() {
   return (
     <Card className="col-span-full border-border shadow-none">
       <CardHeader className="pb-4">
-        <div className="flex items-center space-x-2">
-          <History className="h-5 w-5 text-primary" />
-          <CardTitle className="text-base sm:text-lg">
-            Emission Log History (Today — {activeDevice.timezoneLabel})
-          </CardTitle>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center space-x-2">
+            <History className="h-5 w-5 text-primary" />
+            <CardTitle className="text-base sm:text-lg">
+              Stack Emission Trend (Today — {activeDevice.timezoneLabel})
+            </CardTitle>
+          </div>
+          <span className="text-xs text-slate-500">
+            EPA Caps: PM ≤ 30 mg/Nm³ • CO ≤ 40 ppmv
+          </span>
         </div>
       </CardHeader>
       <CardContent>
@@ -84,9 +89,9 @@ export function EmissionHistoryChart() {
               />
               <Line
                 type="monotone"
-                dataKey="pm25"
+                dataKey="pm"
                 stroke="var(--primary)"
-                name="PM2.5 (µg/m³)"
+                name="Stack PM (mg/Nm³)"
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
@@ -95,7 +100,7 @@ export function EmissionHistoryChart() {
                 type="monotone"
                 dataKey="co"
                 stroke="var(--warning)"
-                name="CO (ppm)"
+                name="Stack CO (ppmv)"
                 strokeWidth={2}
                 dot={{ r: 4 }}
               />

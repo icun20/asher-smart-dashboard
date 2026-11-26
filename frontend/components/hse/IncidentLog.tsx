@@ -17,6 +17,7 @@ interface SafetyIncident {
 export function IncidentLog() {
   const { activeDevice } = useDevice();
   const tz = activeDevice.timezoneLabel;
+  const m = activeDevice.metrics;
 
   let incidents: SafetyIncident[] = [];
 
@@ -25,25 +26,25 @@ export function IncidentLog() {
       {
         id: 1,
         type: "DANGER",
-        title: `PM2.5 Emission Exceeded EPA Limit (${activeDevice.metrics.pm25} µg/m³)`,
-        desc: `Today, 10:15 ${tz} • HLC Carbon filtration saturation alert triggered`,
+        title: `Stack PM (${m.pm25} mg/Nm³) & CO (${m.co} ppmv) Exceeded US EPA OSWI Caps`,
+        desc: `Today, 12:15 ${tz} • HLC Carbon bed saturation detected; immediate filter change queued`,
         status: "Active",
         isResolved: false,
       },
       {
         id: 2,
         type: "DANGER",
-        title: `Chamber Temperature Above Optimal Range (${activeDevice.metrics.coreTemp}°C)`,
-        desc: `Today, 14:22 ${tz} • Automated air intake throttling engaged`,
+        title: `Chamber Temperature Exceeded 1,050°C Alarm (${m.coreTemp.toLocaleString("en-US")}°C)`,
+        desc: `Today, 14:22 ${tz} • High-plastic (32%) feed spike; automated blower throttling engaged`,
         status: "Active",
         isResolved: false,
       },
       {
         id: 3,
-        type: "WARNING",
-        title: `SO₂ Level Approaching Limit (${activeDevice.metrics.so2} ppm)`,
-        desc: `Today, 09:15 ${tz} • Nanogreen scrubber circulation increased`,
-        status: "Monitoring",
+        type: "DANGER",
+        title: `HCl Acid Gas Exceeded 15 ppmv Limit (${m.hcl} ppmv)`,
+        desc: `Today, 13:40 ${tz} • Elevated chlorinated plastic feed; Nanogreen alkaline dosing boosted`,
+        status: "Active",
         isResolved: false,
       },
     ];
@@ -53,7 +54,7 @@ export function IncidentLog() {
         id: 4,
         type: "INFO",
         title: "Scheduled Maintenance Lockout Active",
-        desc: `Today, 07:30 ${tz} • Unit powered down safely at 25°C for blower & chamber service`,
+        desc: `Today, 07:30 ${tz} • Unit powered down safely at ${m.coreTemp}°C for dual blower & HLC service`,
         status: "In Maintenance",
         isResolved: true,
       },
@@ -62,18 +63,18 @@ export function IncidentLog() {
     incidents = [
       {
         id: 5,
-        type: "WARNING",
-        title: `SO₂ Level Approaching Advisory Threshold (${activeDevice.metrics.so2} ppm)`,
-        desc: `Today, 09:15 ${tz} • Nanogreen filtration tank operating at peak efficiency`,
-        status: "Monitoring",
-        isResolved: false,
+        type: "INFO",
+        title: "Continuous US EPA OSWI Compliance Verified (99.6%)",
+        desc: `Today, 15:00 ${tz} • Stack PM (${m.pm25} mg/Nm³), CO (${m.co} ppmv), and HCl (${m.hcl} ppmv) well below EPA limits`,
+        status: "Verified",
+        isResolved: true,
       },
       {
         id: 6,
-        type: "DANGER",
-        title: "Transient Thermal Spike Detected (912°C)",
-        desc: `Today, 08:05 ${tz} • System automatically balanced airflow within 3 minutes`,
-        status: "Resolved (08:08)",
+        type: "WARNING",
+        title: "Transient Chamber Spike (1,022°C)",
+        desc: `Today, 09:15 ${tz} • Within 1,100°C refractory rating; airflow stabilized to 865°C in 4 minutes`,
+        status: "Resolved (09:19)",
         isResolved: true,
       },
     ];
@@ -83,7 +84,7 @@ export function IncidentLog() {
     <Card className="border-border shadow-none">
       <CardHeader className="pb-4">
         <CardTitle className="text-xs text-slate-500 uppercase tracking-wider">
-          Safety Incident Log — {activeDevice.name} (Sorted by Severity)
+          Safety &amp; EPA Incident Log — {activeDevice.name} (Sorted by Severity)
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -104,8 +105,6 @@ export function IncidentLog() {
                   className={`p-2 rounded-md mr-4 shrink-0 ${
                     incident.type === "DANGER" && !incident.isResolved
                       ? "bg-danger/20 text-danger"
-                      : incident.type === "DANGER" && incident.isResolved
-                      ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
                       : incident.type === "WARNING"
                       ? "bg-warning/20 text-warning"
                       : "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"

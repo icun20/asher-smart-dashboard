@@ -31,9 +31,9 @@ export default function SettingsPage() {
   const [profileEmail, setProfileEmail] = useState("johndoe@theasher.com");
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
-  // Threshold state
-  const [tempThreshold, setTempThreshold] = useState(900);
-  const [pm25Threshold, setPm25Threshold] = useState(50);
+  // Threshold state (aligned with Pamarai G7/G8 300-1100°C spec & US EPA OSWI)
+  const [tempThreshold, setTempThreshold] = useState(1050);
+  const [pmLimit, setPmLimit] = useState(30);
   const [b3AutoAlert, setB3AutoAlert] = useState(true);
 
   const showSaved = (message: string) => {
@@ -202,38 +202,40 @@ export default function SettingsPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Core Temperature Threshold (°C)
+                      Chamber Overheat Alarm (°C — Rated Max 1,100°C)
                     </label>
-                    <span className="text-sm text-danger font-bold">{tempThreshold}°C</span>
+                    <span className="text-sm text-danger font-bold">
+                      {tempThreshold.toLocaleString("en-US")}°C
+                    </span>
                   </div>
                   <input
                     type="range"
-                    min={500}
-                    max={1150}
+                    min={850}
+                    max={1100}
                     step={10}
                     value={tempThreshold}
                     onChange={(e) => setTempThreshold(Number(e.target.value))}
                     className="w-full accent-danger"
                   />
                   <p className="text-xs text-slate-500">
-                    Temperatures above this limit trigger an automatic airflow reduction alert.
+                    Temperatures above this threshold trigger automatic blower throttling alerts.
                   </p>
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-border">
                   <div className="flex justify-between">
                     <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      PM2.5 Danger Limit (µg/m³)
+                      Stack PM Compliance Cap (mg/Nm³ @ 7% O₂ — US EPA OSWI: 30)
                     </label>
-                    <span className="text-sm text-danger font-bold">{pm25Threshold} µg/m³</span>
+                    <span className="text-sm text-danger font-bold">{pmLimit} mg/Nm³</span>
                   </div>
                   <input
                     type="range"
-                    min={10}
-                    max={150}
-                    step={5}
-                    value={pm25Threshold}
-                    onChange={(e) => setPm25Threshold(Number(e.target.value))}
+                    min={15}
+                    max={60}
+                    step={1}
+                    value={pmLimit}
+                    onChange={(e) => setPmLimit(Number(e.target.value))}
                     className="w-full accent-danger"
                   />
                 </div>

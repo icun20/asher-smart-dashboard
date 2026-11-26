@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { useDevice } from "@/components/DeviceContext";
+import { THERMAL_ENVELOPE } from "@/lib/hseStandards";
 
 export function TemperatureGauge() {
   const { activeDevice } = useDevice();
@@ -17,7 +18,7 @@ export function TemperatureGauge() {
   let statusColor = "text-safe";
   let strokeColor = "var(--safe)";
 
-  if (temp >= 900) {
+  if (temp >= THERMAL_ENVELOPE.ALARM_OVERHEAT_C) {
     status = "OVERHEATING";
     statusColor = "text-danger";
     strokeColor = "var(--danger)";
@@ -25,7 +26,7 @@ export function TemperatureGauge() {
     status = "OFFLINE";
     statusColor = "text-slate-400";
     strokeColor = "var(--border)";
-  } else if (temp < 650) {
+  } else if (temp < THERMAL_ENVELOPE.OPTIMAL_MIN_C) {
     status = "PRE-HEATING";
     statusColor = "text-warning";
     strokeColor = "var(--warning)";
@@ -33,14 +34,14 @@ export function TemperatureGauge() {
 
   const radius = 60;
   const circumference = 2 * Math.PI * radius;
-  const percentage = Math.min(temp / 1200, 1);
+  const percentage = Math.min(temp / THERMAL_ENVELOPE.GAUGE_MAX_C, 1);
   const strokeDashoffset = circumference - percentage * circumference * 0.75;
 
   return (
     <Card className="h-full border-border shadow-none flex flex-col">
       <CardHeader className="pb-0">
         <CardTitle className="text-xs text-slate-500 uppercase tracking-wider text-center">
-          Combustion Chamber Temperature
+          Thermal Chamber Temperature (Type-K)
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col items-center justify-center p-6 relative">
@@ -73,13 +74,21 @@ export function TemperatureGauge() {
           </svg>
 
           <div className="absolute flex flex-col items-center justify-center text-center">
-            <div className="text-4xl font-bold font-heading mb-1">{temp}°C</div>
-            <div className="text-xs text-slate-400 mb-2">Target: 650–900°C</div>
+            <div className="text-3xl sm:text-4xl font-bold font-heading mb-1">
+              {temp.toLocaleString("en-US")}°C
+            </div>
+            <div className="text-[11px] text-slate-400 mb-1.5">
+              Optimal: {THERMAL_ENVELOPE.OPTIMAL_MIN_C}–{THERMAL_ENVELOPE.OPTIMAL_MAX_C}°C
+            </div>
             <div className={`text-xs font-bold flex items-center ${statusColor}`}>
               {status === "OPTIMAL" && "✓ "}
               {status}
             </div>
           </div>
+        </div>
+        <div className="text-[11px] text-slate-400 text-center mt-2">
+          Rated Spec: {THERMAL_ENVELOPE.MIN_RATED_C}–{THERMAL_ENVELOPE.MAX_RATED_C.toLocaleString("en-US")}°C • Alarm ≥{" "}
+          {THERMAL_ENVELOPE.ALARM_OVERHEAT_C.toLocaleString("en-US")}°C
         </div>
       </CardContent>
     </Card>

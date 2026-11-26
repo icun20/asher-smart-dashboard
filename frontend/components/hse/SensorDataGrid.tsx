@@ -5,72 +5,41 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { StatusBadge, StatusType } from "@/components/ui/StatusBadge";
 import { Activity } from "lucide-react";
 import { useDevice } from "@/components/DeviceContext";
+import {
+  US_EPA_OSWI_STANDARDS,
+  evaluateStackParameter,
+  type ComplianceLevel,
+} from "@/lib/hseStandards";
 
-interface SensorData {
-  id: string;
-  parameter: string;
-  sensorType: string;
-  value: number;
-  unit: string;
-  limit: string;
-  status: StatusType;
-}
-
-function getBadgeStatus(val: number, warn: number, danger: number): StatusType {
-  if (val >= danger) return "Danger";
-  if (val >= warn) return "Warning";
+function toBadgeStatus(level: ComplianceLevel): StatusType {
+  if (level === "DANGER") return "Danger";
+  if (level === "WARNING") return "Warning";
   return "Safe";
 }
 
 export function SensorDataGrid() {
   const { activeDevice } = useDevice();
-  const { pm25, so2, no2, co } = activeDevice.metrics;
+  const { pm25, so2, no2, co, hcl } = activeDevice.metrics;
 
-  const sensorRows: SensorData[] = [
-    {
-      id: "1",
-      parameter: "PM2.5",
-      sensorType: "Laser Scattering",
-      value: pm25,
-      unit: "µg/m³",
-      limit: "50",
-      status: getBadgeStatus(pm25, 35, 50),
-    },
-    {
-      id: "2",
-      parameter: "SO₂",
-      sensorType: "Electrochemical",
-      value: so2,
-      unit: "ppm",
-      limit: "0.10",
-      status: getBadgeStatus(so2, 0.06, 0.1),
-    },
-    {
-      id: "3",
-      parameter: "NO₂",
-      sensorType: "Electrochemical",
-      value: no2,
-      unit: "ppm",
-      limit: "0.15",
-      status: getBadgeStatus(no2, 0.05, 0.15),
-    },
-    {
-      id: "4",
-      parameter: "CO",
-      sensorType: "Electrochemical",
-      value: co,
-      unit: "ppm",
-      limit: "10.0",
-      status: getBadgeStatus(co, 6, 10),
-    },
+  const sensorRows = [
+    { std: US_EPA_OSWI_STANDARDS.pm, value: pm25.toFixed(1), level: evaluateStackParameter("pm", pm25) },
+    { std: US_EPA_OSWI_STANDARDS.co, value: co.toFixed(1), level: evaluateStackParameter("co", co) },
+    { std: US_EPA_OSWI_STANDARDS.so2, value: so2.toFixed(2), level: evaluateStackParameter("so2", so2) },
+    { std: US_EPA_OSWI_STANDARDS.nox, value: no2.toFixed(1), level: evaluateStackParameter("nox", no2) },
+    { std: US_EPA_OSWI_STANDARDS.hcl, value: hcl.toFixed(1), level: evaluateStackParameter("hcl", hcl) },
   ];
 
   return (
     <Card className="shadow-none border border-border">
       <CardHeader className="pb-4">
-        <div className="flex items-center space-x-2">
-          <Activity className="h-5 w-5 text-slate-400" />
-          <CardTitle>Detailed Sensor Log</CardTitle>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center space-x-2">
+            <Activity className="h-5 w-5 text-slate-400" />
+            <CardTitle className="text-base sm:text-lg">
+              Detailed Stack Gas Analyzer Log (US EPA OSWI)
+            </CardTitle>
+          </div>
+          <span className="text-xs text-slate-500">Corrected to 7% O₂, dry basis</span>
         </div>
       </CardHeader>
       <CardContent>
@@ -78,28 +47,30 @@ export function SensorDataGrid() {
           <table className="w-full text-sm text-left">
             <thead className="text-xs text-slate-500 uppercase border-b border-border">
               <tr>
-                <th className="px-4 py-3 font-semibold">Parameter</th>
-                <th className="px-4 py-3 font-semibold">Value</th>
-                <th className="px-4 py-3 hidden sm:table-cell font-semibold">Threshold Limit</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 font-semibold">Parameter &amp; Sensor</th>
+                <th className="px-4 py-3 font-semibold">Reading</th>
+                <th className="px-4 py-3 hidden sm:table-cell font-semibold">US EPA OSWI Limit</th>
+                <th className="px-4 py-3 font-semibold">Compliance</th>
               </tr>
             </thead>
             <tbody>
-              {sensorRows.map((data) => (
-                <tr key={data.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-4 font-medium text-foreground">
-                    {data.parameter}
-                    <div className="text-xs text-slate-400 font-normal mt-0.5">{data.sensorType}</div>
+              {sensorRows.map(({ std, value, level }) => (
+                <tr key={std.id} className="border-b border-border last:border-0">
+                  <td className="px-4 py-3.5 font-medium text-foreground">
+                    {std.fullName}
+                    <div className="text-xs text-slate-400 font-normal mt-0.5">
+                      {std.sensorType}
+                    </div>
                   </td>
-                  <td className="px-4 py-4">
-                    <span className="text-lg font-bold">{data.value}</span>
-                    <span className="text-slate-500 ml-1 text-xs">{data.unit}</span>
+                  <td className="px-4 py-3.5 whitespace-nowrap">
+                    <span className="text-lg font-bold">{value}</span>
+                    <span className="text-slate-500 ml-1 text-xs">{std.unit}</span>
                   </td>
-                  <td className="px-4 py-4 hidden sm:table-cell text-slate-500">
-                    {data.limit} {data.unit}
+                  <td className="px-4 py-3.5 hidden sm:table-cell text-slate-500">
+                    ≤ {std.epaLimit} {std.unit}
                   </td>
-                  <td className="px-4 py-4">
-                    <StatusBadge status={data.status} />
+                  <td className="px-4 py-3.5">
+                    <StatusBadge status={toBadgeStatus(level)} />
                   </td>
                 </tr>
               ))}

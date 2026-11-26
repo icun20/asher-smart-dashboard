@@ -3,10 +3,13 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { useDevice } from "@/components/DeviceContext";
+import {
+  US_EPA_OSWI_STANDARDS,
+  evaluateStackParameter,
+  type ComplianceLevel,
+} from "@/lib/hseStandards";
 
-type EmissionStatus = "SAFE" | "WARNING" | "DANGER";
-
-const getStatusColor = (status: EmissionStatus) => {
+const getStatusColor = (status: ComplianceLevel) => {
   switch (status) {
     case "SAFE":
       return "text-safe dark:text-safe";
@@ -17,7 +20,7 @@ const getStatusColor = (status: EmissionStatus) => {
   }
 };
 
-const getBarColor = (status: EmissionStatus) => {
+const getBarColor = (status: ComplianceLevel) => {
   switch (status) {
     case "SAFE":
       return "bg-safe";
@@ -28,22 +31,25 @@ const getBarColor = (status: EmissionStatus) => {
   }
 };
 
-function evaluateStatus(value: number, warningLimit: number, dangerLimit: number): EmissionStatus {
-  if (value >= dangerLimit) return "DANGER";
-  if (value >= warningLimit) return "WARNING";
-  return "SAFE";
-}
-
 interface ParameterProps {
   label: string;
   value: string;
   unit: string;
-  status: EmissionStatus;
+  limitText: string;
+  status: ComplianceLevel;
   percentage: number;
   mounted: boolean;
 }
 
-const ParameterRow = ({ label, value, unit, status, percentage, mounted }: ParameterProps) => (
+const ParameterRow = ({
+  label,
+  value,
+  unit,
+  limitText,
+  status,
+  percentage,
+  mounted,
+}: ParameterProps) => (
   <div className="flex flex-col space-y-2">
     <div className="flex justify-between items-end">
       <div className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{label}</div>
@@ -54,9 +60,12 @@ const ParameterRow = ({ label, value, unit, status, percentage, mounted }: Param
         {status}
       </div>
     </div>
-    <div className="flex items-baseline space-x-1">
-      <span className="text-3xl font-bold font-heading">{value}</span>
-      <span className="text-sm text-slate-500">{unit}</span>
+    <div className="flex items-baseline justify-between gap-2">
+      <div className="flex items-baseline space-x-1">
+        <span className="text-3xl font-bold font-heading">{value}</span>
+        <span className="text-sm text-slate-500">{unit}</span>
+      </div>
+      <span className="text-[11px] text-slate-400">EPA Cap: {limitText}</span>
     </div>
     <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-2">
       <div
@@ -79,32 +88,36 @@ export function EmissionMonitoring() {
 
   const parameters: Omit<ParameterProps, "mounted">[] = [
     {
-      label: "PM2.5",
+      label: US_EPA_OSWI_STANDARDS.pm.label,
       value: pm25.toFixed(1),
-      unit: "µg/m³",
-      status: evaluateStatus(pm25, 35, 50),
-      percentage: (pm25 / 65) * 100,
+      unit: US_EPA_OSWI_STANDARDS.pm.unit,
+      limitText: `${US_EPA_OSWI_STANDARDS.pm.epaLimit} ${US_EPA_OSWI_STANDARDS.pm.unit}`,
+      status: evaluateStackParameter("pm", pm25),
+      percentage: (pm25 / US_EPA_OSWI_STANDARDS.pm.gaugeMax) * 100,
     },
     {
-      label: "NO₂",
-      value: no2.toFixed(3),
-      unit: "ppm",
-      status: evaluateStatus(no2, 0.05, 0.15),
-      percentage: (no2 / 0.2) * 100,
+      label: US_EPA_OSWI_STANDARDS.nox.label,
+      value: no2.toFixed(1),
+      unit: US_EPA_OSWI_STANDARDS.nox.unit,
+      limitText: `${US_EPA_OSWI_STANDARDS.nox.epaLimit} ${US_EPA_OSWI_STANDARDS.nox.unit}`,
+      status: evaluateStackParameter("nox", no2),
+      percentage: (no2 / US_EPA_OSWI_STANDARDS.nox.gaugeMax) * 100,
     },
     {
-      label: "SO₂",
-      value: so2.toFixed(3),
-      unit: "ppm",
-      status: evaluateStatus(so2, 0.06, 0.1),
-      percentage: (so2 / 0.12) * 100,
+      label: US_EPA_OSWI_STANDARDS.so2.label,
+      value: so2.toFixed(2),
+      unit: US_EPA_OSWI_STANDARDS.so2.unit,
+      limitText: `${US_EPA_OSWI_STANDARDS.so2.epaLimit} ${US_EPA_OSWI_STANDARDS.so2.unit}`,
+      status: evaluateStackParameter("so2", so2),
+      percentage: (so2 / US_EPA_OSWI_STANDARDS.so2.gaugeMax) * 100,
     },
     {
-      label: "CO",
+      label: US_EPA_OSWI_STANDARDS.co.label,
       value: co.toFixed(1),
-      unit: "ppm",
-      status: evaluateStatus(co, 6, 10),
-      percentage: (co / 14) * 100,
+      unit: US_EPA_OSWI_STANDARDS.co.unit,
+      limitText: `${US_EPA_OSWI_STANDARDS.co.epaLimit} ${US_EPA_OSWI_STANDARDS.co.unit}`,
+      status: evaluateStackParameter("co", co),
+      percentage: (co / US_EPA_OSWI_STANDARDS.co.gaugeMax) * 100,
     },
   ];
 
@@ -112,7 +125,7 @@ export function EmissionMonitoring() {
     <Card className="h-full border-border shadow-none">
       <CardHeader className="pb-4">
         <CardTitle className="text-xs text-slate-500 uppercase tracking-wider">
-          Stack Emission Monitoring — Real-Time (US EPA Aligned)
+          Stack Exhaust Monitoring — US EPA 40 CFR 60 (OSWI, Dry Basis @ 7% O₂)
         </CardTitle>
       </CardHeader>
       <CardContent>

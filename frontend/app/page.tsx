@@ -25,10 +25,12 @@ const ALL_METRICS: MetricDefinition[] = [
   { id: "energyConsumedKwh", label: "Energy Consumed", unit: "kWh", color: "#f59e0b" },
   { id: "aqi", label: "Air Quality Index (AQI)", unit: "Idx", color: "#06b6d4" },
   { id: "coreTemp", label: "Core Temperature", unit: "°C", color: "#ef4444" },
-  { id: "pm25", label: "PM2.5", unit: "µg/m³", color: "#8b5cf6" },
-  { id: "no2", label: "NO₂", unit: "ppm", color: "#ec4899" },
-  { id: "so2", label: "SO₂", unit: "ppm", color: "#eab308" },
-  { id: "co", label: "CO", unit: "ppm", color: "#f97316" },
+  { id: "pm25", label: "Stack PM (Particulate)", unit: "mg/Nm³", color: "#8b5cf6" },
+  { id: "no2", label: "Stack NOₓ", unit: "ppmv", color: "#ec4899" },
+  { id: "so2", label: "Stack SO₂", unit: "ppmv", color: "#eab308" },
+  { id: "co", label: "Stack CO", unit: "ppmv", color: "#f97316" },
+  { id: "hcl", label: "Stack HCl (Acid Gas)", unit: "ppmv", color: "#be123c" },
+  { id: "epaCompliancePct", label: "US EPA Compliance", unit: "%", color: "#14b8a6" },
   { id: "organic", label: "Organic Waste", unit: "%", color: "#22c55e" },
   { id: "plastic", label: "Plastic Waste", unit: "%", color: "#0ea5e9" },
   { id: "paper", label: "Paper & Cardboard", unit: "%", color: "#f59e0b" },
@@ -132,32 +134,32 @@ export default function DeviceOverview() {
                     <div
                       className={cn(
                         "font-semibold text-base sm:text-lg",
-                        unit.metrics.coreTemp >= 900
+                        unit.metrics.coreTemp >= 1050
                           ? "text-danger"
                           : unit.metrics.coreTemp < 100
                           ? "text-slate-400"
                           : "text-safe"
                       )}
                     >
-                      {unit.metrics.coreTemp}°C
+                      {unit.metrics.coreTemp.toLocaleString("en-US")}°C
                     </div>
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2.5">
-                    <div className="text-[11px] text-slate-500 mb-1">Emissions</div>
+                    <div className="text-[11px] text-slate-500 mb-1">US EPA Stack</div>
                     <div
                       className={cn(
                         "font-semibold text-base sm:text-lg",
                         unit.status === "warning"
-                          ? "text-warning dark:text-amber-500"
+                          ? "text-danger"
                           : unit.status === "active"
                           ? "text-safe"
                           : "text-slate-400"
                       )}
                     >
                       {unit.status === "warning"
-                        ? "High PM2.5"
+                        ? "EPA Alert"
                         : unit.status === "active"
-                        ? "Normal"
+                        ? "Compliant"
                         : "Offline"}
                     </div>
                   </div>
