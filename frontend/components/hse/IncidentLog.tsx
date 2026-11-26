@@ -15,57 +15,62 @@ interface SafetyIncident {
 }
 
 export function IncidentLog() {
-  const { activeDevice } = useDevice();
+  const { activeDevice, thresholds } = useDevice();
   const tz = activeDevice.timezoneLabel;
   const m = activeDevice.metrics;
 
-  let incidents: SafetyIncident[] = [];
+  const incidents: SafetyIncident[] = [];
 
-  if (activeDevice.id === "1031") {
-    incidents = [
-      {
-        id: 1,
+  // Dynamic live threshold checks so Settings adjustments immediately surface in HSE log
+  if (activeDevice.status !== "maintenance") {
+    if (m.pm25 >= thresholds.pmLimitMgNm3) {
+      incidents.push({
+        id: 101,
         type: "DANGER",
-        title: `Stack PM (${m.pm25} mg/Nm³) & CO (${m.co} ppmv) Exceeded US EPA OSWI Caps`,
-        desc: `Today, 12:15 ${tz} • HLC Carbon bed saturation detected; immediate filter change queued`,
+        title: `Stack PM (${m.pm25} mg/Nm³) Exceeded Active Cap (${thresholds.pmLimitMgNm3} mg/Nm³)`,
+        desc: `Live Telemetry (${tz}) • Check HLC 4080/5050/2080 Carbon saturation & stack differential pressure`,
         status: "Active",
         isResolved: false,
-      },
-      {
-        id: 2,
+      });
+    }
+    if (m.coreTemp >= thresholds.tempAlarmC) {
+      incidents.push({
+        id: 102,
         type: "DANGER",
-        title: `Chamber Temperature Exceeded 1,050°C Alarm (${m.coreTemp.toLocaleString("en-US")}°C)`,
-        desc: `Today, 14:22 ${tz} • High-plastic (32%) feed spike; automated blower throttling engaged`,
+        title: `Chamber Temperature (${m.coreTemp.toLocaleString("en-US")}°C) Exceeded ${thresholds.tempAlarmC.toLocaleString("en-US")}°C Alarm`,
+        desc: `Live Telemetry (${tz}) • Automated blower throttling advised; verify high-calorific plastic loading`,
         status: "Active",
         isResolved: false,
-      },
-      {
-        id: 3,
+      });
+    }
+    if (m.hcl >= 15) {
+      incidents.push({
+        id: 103,
         type: "DANGER",
-        title: `HCl Acid Gas Exceeded 15 ppmv Limit (${m.hcl} ppmv)`,
-        desc: `Today, 13:40 ${tz} • Elevated chlorinated plastic feed; Nanogreen alkaline dosing boosted`,
+        title: `HCl Acid Gas (${m.hcl} ppmv) Exceeded US EPA OSWI Cap (15 ppmv)`,
+        desc: `Live Telemetry (${tz}) • Elevated chlorinated plastic feed; inspect Hi-Alkaline Nanogreen scrubber dosing`,
         status: "Active",
         isResolved: false,
-      },
-    ];
-  } else if (activeDevice.id === "1030") {
-    incidents = [
-      {
-        id: 4,
-        type: "INFO",
-        title: "Scheduled Maintenance Lockout Active",
-        desc: `Today, 07:30 ${tz} • Unit powered down safely at ${m.coreTemp}°C for dual blower & HLC service`,
-        status: "In Maintenance",
-        isResolved: true,
-      },
-    ];
-  } else {
-    incidents = [
+      });
+    }
+  }
+
+  if (activeDevice.id === "1030") {
+    incidents.push({
+      id: 4,
+      type: "INFO",
+      title: "Scheduled Maintenance Lockout Active",
+      desc: `Today, 07:30 ${tz} • Unit powered down safely at ${m.coreTemp}°C for dual blower & HLC service`,
+      status: "In Maintenance",
+      isResolved: true,
+    });
+  } else if (activeDevice.id === "1029") {
+    incidents.push(
       {
         id: 5,
         type: "INFO",
-        title: "Continuous US EPA OSWI Compliance Verified (99.6%)",
-        desc: `Today, 15:00 ${tz} • Stack PM (${m.pm25} mg/Nm³), CO (${m.co} ppmv), and HCl (${m.hcl} ppmv) well below EPA limits`,
+        title: `US EPA OSWI Compliance Logged (${m.epaCompliancePct}% Monthly Hours)`,
+        desc: `Today, 15:00 ${tz} • Stack PM (${m.pm25} mg/Nm³), CO (${m.co} ppmv), and HCl (${m.hcl} ppmv) within statutory limits`,
         status: "Verified",
         isResolved: true,
       },
@@ -76,8 +81,8 @@ export function IncidentLog() {
         desc: `Today, 09:15 ${tz} • Within 1,100°C refractory rating; airflow stabilized to 865°C in 4 minutes`,
         status: "Resolved (09:19)",
         isResolved: true,
-      },
-    ];
+      }
+    );
   }
 
   return (

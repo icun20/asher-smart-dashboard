@@ -28,8 +28,8 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
 
   // Profile state
-  const [profileName, setProfileName] = useState("John Doe");
-  const [profileEmail, setProfileEmail] = useState("johndoe@theasher.com");
+  const [profileName, setProfileName] = useState("Operations Admin");
+  const [profileEmail, setProfileEmail] = useState("ops@pamarai-demo.com");
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
   // Draft threshold state synced with shared DeviceContext

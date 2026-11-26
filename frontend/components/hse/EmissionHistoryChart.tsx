@@ -10,6 +10,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
 import { useDevice } from "@/components/DeviceContext";
@@ -48,7 +49,7 @@ const HISTORY_BY_DEVICE: Record<string, { time: string; pm: number; co: number }
 };
 
 export function EmissionHistoryChart() {
-  const { activeDevice } = useDevice();
+  const { activeDevice, thresholds } = useDevice();
   const data = HISTORY_BY_DEVICE[activeDevice.id] ?? HISTORY_BY_DEVICE["1029"];
 
   return (
@@ -62,14 +63,14 @@ export function EmissionHistoryChart() {
             </CardTitle>
           </div>
           <span className="text-xs text-slate-500">
-            EPA Caps: PM ≤ 30 mg/Nm³ • CO ≤ 40 ppmv
+            Active Caps: PM ≤ {thresholds.pmLimitMgNm3} mg/Nm³ • CO ≤ 40 ppmv
           </span>
         </div>
       </CardHeader>
       <CardContent>
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <LineChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
               <XAxis dataKey="time" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
               <YAxis
@@ -85,6 +86,17 @@ export function EmissionHistoryChart() {
                   borderRadius: "8px",
                   border: "1px solid var(--border)",
                   color: "var(--foreground)",
+                }}
+              />
+              <ReferenceLine
+                y={thresholds.pmLimitMgNm3}
+                stroke="var(--danger)"
+                strokeDasharray="4 4"
+                label={{
+                  value: `PM Cap (${thresholds.pmLimitMgNm3})`,
+                  position: "insideTopRight",
+                  fill: "var(--danger)",
+                  fontSize: 11,
                 }}
               />
               <Line

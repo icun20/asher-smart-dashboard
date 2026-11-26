@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Recycle, QrCode, Sprout, Blocks, CheckCircle2, Thermometer } from "lucide-react";
+import { Recycle, QrCode, Sprout, Blocks, CheckCircle2, Thermometer, AlertTriangle } from "lucide-react";
 import { useDevice } from "@/components/DeviceContext";
 
 export function MassBalanceCard() {
@@ -10,7 +10,9 @@ export function MassBalanceCard() {
   const [showPassport, setShowPassport] = useState(false);
 
   const m = activeDevice.metrics;
-  const sterilizationVerified = m.coreTemp >= 800 || activeDevice.status !== "active";
+  const isContaminatedOrAlert =
+    activeDevice.status === "warning" || m.hazardous >= 5 || m.hcl >= 15;
+  const isOffline = activeDevice.status === "maintenance";
 
   return (
     <Card className="h-full shadow-none border-border flex flex-col">
@@ -30,24 +32,24 @@ export function MassBalanceCard() {
         {/* Input vs Sterilized Ash Output */}
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3.5 rounded-xl border border-border bg-slate-50/70 dark:bg-slate-800/40">
-            <div className="text-xs text-slate-500 uppercase font-medium">Waste Input (Month)</div>
+            <div className="text-xs text-slate-500 uppercase font-medium">Waste Input (30d)</div>
             <div className="text-2xl font-bold font-heading text-foreground mt-1">
               {m.wasteProcessedTon}{" "}
               <span className="text-xs font-normal text-slate-400">tons</span>
             </div>
-            <div className="text-[11px] text-slate-500 mt-1">Weighed at Floor Scale</div>
+            <div className="text-[11px] text-slate-500 mt-1">Logged via Floor Scale</div>
           </div>
 
           <div className="p-3.5 rounded-xl border border-border bg-slate-50/70 dark:bg-slate-800/40">
             <div className="text-xs text-slate-500 uppercase font-medium">
-              Sterilized Ash (~4%)
+              Mineral Ash (~4%)
             </div>
             <div className="text-2xl font-bold font-heading text-safe mt-1">
-              {m.ashOutputTon.toFixed(1)}{" "}
+              {m.ashOutputTon.toFixed(2)}{" "}
               <span className="text-xs font-normal text-slate-400">tons</span>
             </div>
             <div className="text-[11px] text-slate-500 mt-1">
-              Est. Off-take: ${m.ashValueUsd.toLocaleString("en-US")}
+              Est. Off-take: ${m.ashValueUsd.toLocaleString("en-US")}/mo
             </div>
           </div>
         </div>
@@ -55,10 +57,10 @@ export function MassBalanceCard() {
         {/* Visual Mass Reduction Bar */}
         <div className="space-y-2">
           <div className="flex justify-between text-xs font-medium">
-            <span className="text-slate-500">Thermal Volume Reduction</span>
+            <span className="text-slate-500">Thermal Mass Reduction (#trash2ash4%)</span>
             <span className="text-foreground">
-              {m.massReductionPct.toFixed(1)}% Vaporized / {(100 - m.massReductionPct).toFixed(1)}%
-              Mineral Ash
+              {m.massReductionPct.toFixed(1)}% Reduced / {(100 - m.massReductionPct).toFixed(1)}%
+              Bottom Ash
             </span>
           </div>
           <div className="h-2.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
@@ -73,14 +75,14 @@ export function MassBalanceCard() {
           </div>
         </div>
 
-        {/* Derivative Circular Products */}
+        {/* Derivative Circular Products (Manual Sieving via Ashtray Container) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="p-3 rounded-lg border border-border flex items-start gap-2.5">
             <Sprout className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
             <div>
-              <div className="text-xs font-semibold text-foreground">Soil Conditioner / Fertilizer</div>
+              <div className="text-xs font-semibold text-foreground">Soil Conditioner</div>
               <div className="text-[11px] text-slate-500 mt-0.5">
-                Potassium &amp; mineral-rich organic ash fraction
+                Organic-dominant batches only; requires TCLP heavy-metal clearance
               </div>
             </div>
           </div>
@@ -89,7 +91,7 @@ export function MassBalanceCard() {
             <div>
               <div className="text-xs font-semibold text-foreground">Sand Bricks &amp; Cement Mix</div>
               <div className="text-[11px] text-slate-500 mt-0.5">
-                Inert aggregate substitute for eco-construction
+                Manual sieving via Ash Container; inert construction aggregate
               </div>
             </div>
           </div>
@@ -100,14 +102,20 @@ export function MassBalanceCard() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-safe" />
-                Digital Product Passport: {m.latestAshBatchId}
+                {isContaminatedOrAlert ? (
+                  <AlertTriangle className="w-3.5 h-3.5 text-danger" />
+                ) : (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-safe" />
+                )}
+                Batch Passport: {m.latestAshBatchId}
               </div>
               <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
-                <Thermometer className="w-3 h-3" />
-                {sterilizationVerified
-                  ? "Sterilization verified (≥850°C thermal cycle logged)"
-                  : "Awaiting high-temp cycle verification"}
+                <Thermometer className="w-3 h-3 shrink-0" />
+                {isContaminatedOrAlert
+                  ? "HOLD: B3 / high-HCl batch — lab leachate test required before agricultural reuse"
+                  : isOffline
+                  ? "Last completed batch logged at ≥850°C prior to maintenance lockout"
+                  : `Thermal sterilization logged (${m.coreTemp}°C active chamber)`}
               </div>
             </div>
             <button
@@ -116,51 +124,59 @@ export function MassBalanceCard() {
               className="inline-flex items-center justify-center px-3 py-1.5 rounded-md border border-border bg-card text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shrink-0"
             >
               <QrCode className="w-3.5 h-3.5 mr-1.5" />
-              {showPassport ? "Hide QR Passport" : "View QR Passport"}
+              {showPassport ? "Hide Passport" : "View Batch Passport"}
             </button>
           </div>
 
           {showPassport && (
             <div className="mt-4 p-4 rounded-xl border border-border bg-slate-50 dark:bg-slate-900 flex flex-col sm:flex-row items-center gap-4">
-              {/* Crisp deterministic SVG QR visual for batch passport */}
-              <svg
-                viewBox="0 0 21 21"
-                className="w-24 h-24 shrink-0 bg-white p-1.5 rounded-lg border border-slate-200 text-slate-900"
-                aria-label={`QR Code for ${m.latestAshBatchId}`}
-              >
-                <rect x="1" y="1" width="5" height="5" fill="none" stroke="currentColor" strokeWidth="1.2" />
-                <rect x="2.6" y="2.6" width="1.8" height="1.8" fill="currentColor" />
-                <rect x="15" y="1" width="5" height="5" fill="none" stroke="currentColor" strokeWidth="1.2" />
-                <rect x="16.6" y="2.6" width="1.8" height="1.8" fill="currentColor" />
-                <rect x="1" y="15" width="5" height="5" fill="none" stroke="currentColor" strokeWidth="1.2" />
-                <rect x="2.6" y="16.6" width="1.8" height="1.8" fill="currentColor" />
-                <rect x="8" y="2" width="1.5" height="1.5" fill="currentColor" />
-                <rect x="11" y="2" width="1.5" height="3" fill="currentColor" />
-                <rect x="8" y="6" width="3" height="1.5" fill="currentColor" />
-                <rect x="2" y="9" width="3" height="1.5" fill="currentColor" />
-                <rect x="7" y="9" width="2" height="2" fill="currentColor" />
-                <rect x="11" y="8" width="2" height="3" fill="currentColor" />
-                <rect x="15" y="8" width="4" height="1.5" fill="currentColor" />
-                <rect x="16" y="11" width="3" height="2" fill="currentColor" />
-                <rect x="8" y="13" width="2" height="3" fill="currentColor" />
-                <rect x="12" y="13" width="2" height="2" fill="currentColor" />
-                <rect x="15" y="15" width="2" height="4" fill="currentColor" />
-                <rect x="18" y="16" width="1.5" height="3" fill="currentColor" />
-                <rect x="11" y="17" width="2.5" height="2" fill="currentColor" />
-              </svg>
+              <div className="flex flex-col items-center shrink-0">
+                <svg
+                  viewBox="0 0 21 21"
+                  className="w-20 h-20 bg-white p-1.5 rounded-lg border border-slate-200 text-slate-900"
+                  aria-label={`Batch passport preview for ${m.latestAshBatchId}`}
+                >
+                  <rect x="1" y="1" width="5" height="5" fill="none" stroke="currentColor" strokeWidth="1.2" />
+                  <rect x="2.6" y="2.6" width="1.8" height="1.8" fill="currentColor" />
+                  <rect x="15" y="1" width="5" height="5" fill="none" stroke="currentColor" strokeWidth="1.2" />
+                  <rect x="16.6" y="2.6" width="1.8" height="1.8" fill="currentColor" />
+                  <rect x="1" y="15" width="5" height="5" fill="none" stroke="currentColor" strokeWidth="1.2" />
+                  <rect x="2.6" y="16.6" width="1.8" height="1.8" fill="currentColor" />
+                  <rect x="8" y="2" width="1.5" height="1.5" fill="currentColor" />
+                  <rect x="11" y="2" width="1.5" height="3" fill="currentColor" />
+                  <rect x="8" y="6" width="3" height="1.5" fill="currentColor" />
+                  <rect x="2" y="9" width="3" height="1.5" fill="currentColor" />
+                  <rect x="7" y="9" width="2" height="2" fill="currentColor" />
+                  <rect x="11" y="8" width="2" height="3" fill="currentColor" />
+                  <rect x="15" y="8" width="4" height="1.5" fill="currentColor" />
+                  <rect x="16" y="11" width="3" height="2" fill="currentColor" />
+                  <rect x="8" y="13" width="2" height="3" fill="currentColor" />
+                  <rect x="12" y="13" width="2" height="2" fill="currentColor" />
+                  <rect x="15" y="15" width="2" height="4" fill="currentColor" />
+                  <rect x="18" y="16" width="1.5" height="3" fill="currentColor" />
+                  <rect x="11" y="17" width="2.5" height="2" fill="currentColor" />
+                </svg>
+                <span className="text-[10px] text-slate-400 mt-1">QR Label Mockup</span>
+              </div>
               <div className="text-xs space-y-1 text-center sm:text-left">
                 <div className="font-bold text-foreground">
-                  ASHER Sterilized Ash Certificate ({m.latestAshBatchId})
+                  Ash Traceability Record ({m.latestAshBatchId})
                 </div>
                 <div className="text-slate-500">
-                  Origin Unit: {activeDevice.name} (SN: {activeDevice.sn}) • {activeDevice.location}
+                  Origin Unit: {activeDevice.name} ({activeDevice.model} • SN: {activeDevice.sn})
                 </div>
                 <div className="text-slate-500">
-                  Net Ash Weight: {m.ashOutputTon.toFixed(1)} tons • Reduction: {m.massReductionPct}%
+                  Ash Output: {m.ashOutputTon.toFixed(2)} tons • Reduction: {m.massReductionPct.toFixed(1)}%
                 </div>
-                <div className="text-safe font-medium">
-                  Verified pathogen-free for Soil Conditioner &amp; Eco-Brick feedstock.
-                </div>
+                {isContaminatedOrAlert ? (
+                  <div className="text-danger font-medium">
+                    Restricted: Route to construction aggregate only pending heavy-metal leachate lab test.
+                  </div>
+                ) : (
+                  <div className="text-safe font-medium">
+                    Thermal cycle ≥850°C logged. Eligible for eco-brick aggregate or TCLP-verified soil conditioner.
+                  </div>
+                )}
               </div>
             </div>
           )}

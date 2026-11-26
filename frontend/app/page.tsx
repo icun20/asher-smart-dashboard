@@ -6,6 +6,7 @@ import { Activity, AlertTriangle, CheckCircle2, Wrench, X, Filter, BarChart3 } f
 import { cn } from "@/lib/utils";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip } from "recharts";
 import { useDevice, type DeviceMetrics } from "@/components/DeviceContext";
+import { evaluateStackParameter } from "@/lib/hseStandards";
 
 type NumericMetricKey = {
   [K in keyof DeviceMetrics]: DeviceMetrics[K] extends number ? K : never;
@@ -20,7 +21,7 @@ interface MetricDefinition {
 }
 
 const ALL_METRICS: MetricDefinition[] = [
-  { id: "estimatedValue", label: "Estimated Value", unit: "$", color: "#10b981", isCurrency: true },
+  { id: "estimatedValue", label: "Ex-Ante Carbon Credit ($/mo)", unit: "$", color: "#10b981", isCurrency: true },
   { id: "wasteProcessedTon", label: "Waste Processed", unit: "Ton", color: "#3b82f6" },
   { id: "energyConsumedKwh", label: "Energy Consumed", unit: "kWh", color: "#f59e0b" },
   { id: "aqi", label: "Air Quality Index (AQI)", unit: "Idx", color: "#06b6d4" },
@@ -93,99 +94,109 @@ export default function DeviceOverview() {
       {!isCompareMode ? (
         /* STANDARD OVERVIEW MODE */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {fleet.map((unit) => (
-            <Link
-              href="/executive"
-              key={unit.id}
-              onClick={() => setActiveDevice(unit)}
-              className="block group/card"
-            >
-              <div className="bg-card border border-border rounded-xl p-5 hover:border-slate-400 hover:shadow-md transition-all h-full flex flex-col relative">
-                <div className="flex justify-between items-start mb-4 gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-lg group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400 transition-colors truncate">
-                        {unit.name}
-                      </h3>
-                      <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
-                        {unit.model}
-                      </span>
-                    </div>
-                    <div className="text-xs sm:text-sm text-slate-500 flex items-center flex-wrap gap-1 mt-1">
-                      <span>SN: {unit.sn} • {unit.location}</span>
-                      <span className="hidden sm:inline">•</span>
-                      <DeviceTime timezone={unit.timezone} />
-                    </div>
-                  </div>
-                  {unit.status === "active" && (
-                    <CheckCircle2 className="text-safe w-6 h-6 shrink-0" aria-label="Active" />
-                  )}
-                  {unit.status === "warning" && (
-                    <AlertTriangle className="text-warning w-6 h-6 shrink-0" aria-label="Warning" />
-                  )}
-                  {unit.status === "maintenance" && (
-                    <Activity className="text-slate-400 w-6 h-6 shrink-0" aria-label="Maintenance" />
-                  )}
-                </div>
+          {fleet.map((unit) => {
+            const hasEpaBreach =
+              unit.status !== "maintenance" &&
+              (evaluateStackParameter("pm", unit.metrics.pm25, thresholds.pmLimitMgNm3) === "DANGER" ||
+                evaluateStackParameter("co", unit.metrics.co) === "DANGER" ||
+                evaluateStackParameter("hcl", unit.metrics.hcl) === "DANGER" ||
+                unit.metrics.coreTemp >= thresholds.tempAlarmC);
+            const urgentCount = unit.maintenanceTasks.filter((t) => t.urgency !== "low").length;
 
-                <div className="grid grid-cols-2 gap-3 mt-auto pt-4">
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2.5">
-                    <div className="text-[11px] text-slate-500 mb-1">Core Temp</div>
-                    <div
-                      className={cn(
-                        "font-semibold text-base sm:text-lg",
-                        unit.metrics.coreTemp >= thresholds.tempAlarmC
-                          ? "text-danger"
-                          : unit.metrics.coreTemp < 100
-                          ? "text-slate-400"
-                          : "text-safe"
-                      )}
-                    >
-                      {unit.metrics.coreTemp.toLocaleString("en-US")}°C
-                    </div>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2.5">
-                    <div className="text-[11px] text-slate-500 mb-1">US EPA Stack</div>
-                    <div
-                      className={cn(
-                        "font-semibold text-base sm:text-lg",
-                        unit.metrics.pm25 >= thresholds.pmLimitMgNm3 || unit.status === "warning"
-                          ? "text-danger"
-                          : unit.status === "active"
-                          ? "text-safe"
-                          : "text-slate-400"
-                      )}
-                    >
-                      {unit.metrics.pm25 >= thresholds.pmLimitMgNm3 || unit.status === "warning"
-                        ? "EPA Alert"
-                        : unit.status === "active"
-                        ? "Compliant"
-                        : "Offline"}
-                    </div>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2.5">
-                    <div className="text-[11px] text-slate-500 mb-1">Est. Credit / mo</div>
-                    <div className="font-semibold text-base sm:text-lg text-foreground">
-                      {unit.metrics.carbonCreditValue}
-                    </div>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2.5">
-                    <div className="text-[11px] text-slate-500 mb-1">Maintenance</div>
-                    <div className="font-semibold flex items-center">
-                      {unit.maintenanceTasks.filter((t) => t.urgency !== "low").length === 0 ? (
-                        <span className="text-safe text-sm">All Clear</span>
-                      ) : (
-                        <span className="text-warning text-sm flex items-center">
-                          <Wrench className="w-3.5 h-3.5 mr-1 shrink-0" />
-                          {unit.maintenanceTasks.length} Tasks
+            return (
+              <Link
+                href="/executive"
+                key={unit.id}
+                onClick={() => setActiveDevice(unit)}
+                className="block group/card"
+              >
+                <div className="bg-card border border-border rounded-xl p-5 hover:border-slate-400 hover:shadow-md transition-all h-full flex flex-col relative">
+                  <div className="flex justify-between items-start mb-4 gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold text-lg group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400 transition-colors truncate">
+                          {unit.name}
+                        </h3>
+                        <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                          {unit.model}
                         </span>
-                      )}
+                      </div>
+                      <div className="text-xs sm:text-sm text-slate-500 flex items-center flex-wrap gap-1 mt-1">
+                        <span>SN: {unit.sn} • {unit.location}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <DeviceTime timezone={unit.timezone} />
+                      </div>
+                    </div>
+                    {unit.status === "maintenance" ? (
+                      <Activity className="text-slate-400 w-6 h-6 shrink-0" aria-label="Maintenance" />
+                    ) : hasEpaBreach ? (
+                      <AlertTriangle className="text-danger w-6 h-6 shrink-0" aria-label="EPA Alert" />
+                    ) : (
+                      <CheckCircle2 className="text-safe w-6 h-6 shrink-0" aria-label="Active" />
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mt-auto pt-4">
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2.5">
+                      <div className="text-[11px] text-slate-500 mb-1">Core Temp</div>
+                      <div
+                        className={cn(
+                          "font-semibold text-base sm:text-lg",
+                          unit.metrics.coreTemp >= thresholds.tempAlarmC
+                            ? "text-danger"
+                            : unit.metrics.coreTemp < 100
+                            ? "text-slate-400"
+                            : "text-safe"
+                        )}
+                      >
+                        {unit.metrics.coreTemp.toLocaleString("en-US")}°C
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2.5">
+                      <div className="text-[11px] text-slate-500 mb-1">US EPA Stack</div>
+                      <div
+                        className={cn(
+                          "font-semibold text-base sm:text-lg",
+                          unit.status === "maintenance"
+                            ? "text-slate-400"
+                            : hasEpaBreach
+                            ? "text-danger"
+                            : "text-safe"
+                        )}
+                      >
+                        {unit.status === "maintenance"
+                          ? "Offline"
+                          : hasEpaBreach
+                          ? "EPA Alert"
+                          : "Compliant"}
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2.5">
+                      <div className="text-[11px] text-slate-500 mb-1">Est. Credit / mo</div>
+                      <div className="font-semibold text-base sm:text-lg text-foreground">
+                        {unit.metrics.carbonCreditValue}
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2.5">
+                      <div className="text-[11px] text-slate-500 mb-1">Service Queue</div>
+                      <div className="font-semibold flex items-center">
+                        {urgentCount === 0 ? (
+                          <span className="text-safe text-sm">
+                            {unit.maintenanceTasks.length} Scheduled
+                          </span>
+                        ) : (
+                          <span className="text-warning text-sm flex items-center">
+                            <Wrench className="w-3.5 h-3.5 mr-1 shrink-0" />
+                            {urgentCount} Urgent
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       ) : (
         /* ADVANCED COMPARE MODE */

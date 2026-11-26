@@ -6,12 +6,12 @@ import { Gauge, Zap, Scale, ScanEye, ArrowUpRight, AlertTriangle } from "lucide-
 import { useDevice } from "@/components/DeviceContext";
 
 export function OperatorKpiGrid() {
-  const { activeDevice } = useDevice();
+  const { activeDevice, thresholds } = useDevice();
   const m = activeDevice.metrics;
   const kwhPerTon =
     m.wasteProcessedTon > 0 ? Math.round(m.energyConsumedKwh / m.wasteProcessedTon) : 0;
   const isOffline = activeDevice.status === "maintenance";
-  const hasElevatedB3 = m.hazardous >= 5;
+  const hasElevatedB3 = thresholds.b3AutoAlert && m.hazardous >= 5;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -26,14 +26,12 @@ export function OperatorKpiGrid() {
             {m.utilizationPct}%
           </div>
           <div className="text-xs text-slate-500 mt-1">
-            {m.operatingHoursMonth} hrs logged this month
+            {m.operatingHoursMonth} hrs logged (30-day cycle)
           </div>
         </div>
         <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-3">
           <div
-            className={`h-full rounded-full ${
-              isOffline ? "bg-slate-400" : "bg-primary"
-            }`}
+            className={`h-full rounded-full ${isOffline ? "bg-slate-400" : "bg-primary"}`}
             style={{ width: `${m.utilizationPct}%` }}
           />
         </div>
@@ -59,7 +57,7 @@ export function OperatorKpiGrid() {
       {/* Energy Efficiency Index */}
       <div className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between">
         <div className="flex items-center justify-between text-xs text-slate-500 font-medium uppercase">
-          <span>Energy Efficiency</span>
+          <span>Energy Intensity</span>
           <Zap className="w-4 h-4 text-amber-500" />
         </div>
         <div className="mt-2">
@@ -68,7 +66,7 @@ export function OperatorKpiGrid() {
             <span className="text-sm font-normal text-slate-400">kWh/ton</span>
           </div>
           <div className="text-xs text-slate-500 mt-1">
-            Zero-fuel thermal plasma • 3-Phase 415V
+            Zero-fuel electric thermal • 3-Phase 415V
           </div>
         </div>
       </div>

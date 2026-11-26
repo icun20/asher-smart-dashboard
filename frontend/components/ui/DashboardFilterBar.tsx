@@ -19,15 +19,14 @@ export function DashboardFilterBar({
   filterOptions = ["All Parameters", "Active Only", "Alerts & Warnings"],
   onFilterChange,
 }: DashboardFilterBarProps) {
+  // Default 30-day monthly reporting cycle matching monthly telemetry metrics
   const [date, setDate] = useState<DateRange | undefined>({
-    from: new Date(2026, 1, 4),
+    from: new Date(2026, 9, 28),
     to: new Date(2026, 10, 26),
   });
 
   const [selectedFilter, setSelectedFilter] = useState<string>(filterOptions[0]);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [compareMode, setCompareMode] = useState("Previous period");
-  const [compareOpen, setCompareOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [monthsCount, setMonthsCount] = useState(1);
 
@@ -40,22 +39,16 @@ export function DashboardFilterBar({
     return () => window.removeEventListener("resize", updateMonths);
   }, []);
 
-  const compareOptions = [
-    "Previous period",
-    "Previous year",
-    "No comparison",
-  ];
-
   const quickDates = [
     { label: "Today", getRange: () => ({ from: new Date(), to: new Date() }) },
     { label: "Last 7 Days", getRange: () => ({ from: subDays(new Date(), 7), to: new Date() }) },
-    { label: "Last 30 Days", getRange: () => ({ from: subDays(new Date(), 30), to: new Date() }) },
+    { label: "Last 30 Days", getRange: () => ({ from: subDays(new Date(), 29), to: new Date() }) },
     { label: "Year to Date", getRange: () => ({ from: startOfYear(new Date()), to: new Date() }) },
   ];
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 z-20 relative">
-      {/* Filter Dropdown */}
+      {/* Working Section / Module Filter */}
       <Popover open={filterOpen} onOpenChange={setFilterOpen}>
         <PopoverTrigger asChild>
           <button
@@ -96,40 +89,9 @@ export function DashboardFilterBar({
       </Popover>
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-        {/* Compare Dropdown */}
-        <Popover open={compareOpen} onOpenChange={setCompareOpen}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center sm:justify-start rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors shadow-sm text-slate-600 dark:text-slate-400"
-            >
-              Compare: <span className="text-foreground ml-1">{compareMode}</span>
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56 p-2 z-50 bg-card" align="end">
-            <div className="space-y-1">
-              {compareOptions.map((option) => (
-                <button
-                  type="button"
-                  key={option}
-                  onClick={() => {
-                    setCompareMode(option);
-                    setCompareOpen(false);
-                  }}
-                  className={cn(
-                    "w-full flex items-center justify-between px-2 py-2 text-sm rounded-md transition-colors",
-                    compareMode === option
-                      ? "bg-slate-100 dark:bg-slate-800 text-foreground font-medium"
-                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50 hover:text-foreground"
-                  )}
-                >
-                  {option}
-                  {compareMode === option && <Check className="w-4 h-4" />}
-                </button>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+        <span className="inline-flex items-center justify-center rounded-md border border-border bg-slate-50 dark:bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-500">
+          30-Day Monthly Reporting Cycle
+        </span>
 
         {/* Date Range Picker */}
         <Popover open={dateOpen} onOpenChange={setDateOpen}>
@@ -152,9 +114,14 @@ export function DashboardFilterBar({
               )}
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto max-w-[95vw] p-0 flex flex-col md:flex-row z-50 bg-card overflow-x-auto" align="end">
+          <PopoverContent
+            className="w-auto max-w-[95vw] p-0 flex flex-col md:flex-row z-50 bg-card overflow-x-auto"
+            align="end"
+          >
             <div className="border-b md:border-b-0 md:border-r border-border p-4 w-full md:w-44 space-y-2 flex flex-col">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Quick Dates</span>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                Quick Dates
+              </span>
               {quickDates.map((preset) => (
                 <button
                   type="button"

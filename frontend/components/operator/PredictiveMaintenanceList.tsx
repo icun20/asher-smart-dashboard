@@ -2,19 +2,28 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Wrench, Clock, ActivitySquare, CheckCircle2 } from "lucide-react";
+import { Wrench, Clock, Activity, CheckCircle2 } from "lucide-react";
 import { useDevice } from "@/components/DeviceContext";
 
 export function PredictiveMaintenanceList() {
   const { activeDevice } = useDevice();
   const tasks = activeDevice.maintenanceTasks;
 
+  const getTriggerBasis = (urgency: "high" | "medium" | "low") => {
+    if (urgency === "high") return "Sensor / Lockout Trigger";
+    if (urgency === "medium") return "Warranty Interval";
+    return "Usage Counter (Spec)";
+  };
+
   return (
     <Card className="h-full shadow-none border-border">
       <CardHeader className="pb-4">
-        <div className="flex items-center space-x-2">
-          <Wrench className="h-5 w-5 text-slate-400" />
-          <CardTitle className="text-lg">Consumables &amp; Predictive Maintenance</CardTitle>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center space-x-2">
+            <Wrench className="h-5 w-5 text-slate-400" />
+            <CardTitle className="text-lg">Filtration Consumables &amp; Service Schedule</CardTitle>
+          </div>
+          <span className="text-[11px] text-slate-400 hidden sm:inline">Usage-based tracking</span>
         </div>
       </CardHeader>
       <CardContent>
@@ -47,7 +56,7 @@ export function PredictiveMaintenanceList() {
                   <div>
                     <h4 className="font-bold text-foreground">{task.action}</h4>
                     <div className="flex items-start text-xs sm:text-sm text-slate-500 mt-1">
-                      <ActivitySquare className="h-3.5 w-3.5 mr-1.5 mt-0.5 shrink-0" />
+                      <Activity className="h-3.5 w-3.5 mr-1.5 mt-0.5 shrink-0" />
                       <span>{task.reason}</span>
                     </div>
                   </div>
@@ -56,8 +65,8 @@ export function PredictiveMaintenanceList() {
                       <Clock className="h-4 w-4 mr-1.5 text-primary shrink-0" />
                       {task.countdown}
                     </div>
-                    <div className="text-xs font-semibold text-primary mt-0.5">
-                      Confidence: {task.accuracy}%
+                    <div className="text-[11px] font-medium text-slate-500 mt-0.5">
+                      {getTriggerBasis(task.urgency)}
                     </div>
                   </div>
                 </div>
