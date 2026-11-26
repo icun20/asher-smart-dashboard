@@ -79,7 +79,9 @@ export function Sidebar() {
         >
           {!isCollapsed && (
             <Link href="/" className="flex items-center">
-              <Leaf className="w-6 h-6 text-primary mr-2 shrink-0" />
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 border border-primary/40 mr-2.5 shrink-0">
+                <Leaf className="w-4 h-4 text-primary" />
+              </span>
               <span className="text-lg font-bold tracking-tight text-foreground font-heading whitespace-nowrap">
                 Asher EcoDash
               </span>

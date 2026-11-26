@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { User, ChevronDown, Check, Search } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { PwaInstallButton } from "@/components/PwaInstallButton";
 import { usePathname } from "next/navigation";
 import { useDevice } from "@/components/DeviceContext";
 import { cn } from "@/lib/utils";
@@ -133,8 +134,9 @@ export function Header() {
         )}
       </div>
 
-      <div className="flex items-center gap-x-2 sm:gap-x-4 shrink-0">
+      <div className="flex items-center gap-x-2 sm:gap-x-3 shrink-0">
         <LocalTime />
+        <PwaInstallButton />
         <ThemeToggle />
 
         <Link
